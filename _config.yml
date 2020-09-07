@@ -5,13 +5,8 @@ email: contact@ezranewman.com
 description: I'm a high school student interested in cybersecurity, programming, backpacking, lighting design, sailing, community service, and more.
 baseurl: "/" # the subpath of your site, e.g. /blog
 url: # the base hostname & protocol for your site
+email: public-contact-1@ezranewman.com
 author:
-street_address: 670 Rosal Ave
-city: Oakland
-state: CA
-zip_code: 94610
-country: United States of America
-phone: (510) 499-7837
 
 # homepage tiles
 tiles-source: pages # accepts "posts" or "pages"
