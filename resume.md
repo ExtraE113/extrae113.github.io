@@ -15,7 +15,7 @@ Relevant Courses include: AP Computer Science, Data Structures and Algorithms, C
 ### Freelance Software Development
 * [Nationball](https://www.nationball.com) Developed and managed project with multiple players and a five-figure budget
     * Relevant skills: Python/Django, Postgress, HTML/CSS/Javascript 
-* [Open Model Project](https://www.openmodelproject.org) Developed website and [the interactive poll explorer](https://www.openmodelproject.org/inhouse/) under extremely tight time pressure (unexpected runnoff election)
+* [Open Model Project](https://www.openmodelproject.org) Developed website and [the interactive poll explorer](https://www.openmodelproject.org/inhouse/) under extremely tight time pressure (unexpected runoff election)
     * Relevant skills: AWS Lambda/Serverless, Python, Optimization and Caching 
 
 
