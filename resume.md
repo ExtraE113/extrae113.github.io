@@ -35,7 +35,7 @@ Relevant Courses include: AP Computer Science, Data Structures and Algorithms, C
   - Worked dozens of shows and concerts designing and implementing theatrical lighting with a small team
   - Integrated with other Technical Theatre departments and collaborated with well over 100 students in total
 
-### Varsity & Junior Varsity Sailing, The Athenian School (2018-Present)
+### Varsity & Junior Varsity Sailing, The Athenian School (2018-2020)
 * Learned how to race small single and two-handed boats in the San Francisco Bay Area
   - Gained knowledge of the physics and fluid dynamics involved in sailing at a high level
 
