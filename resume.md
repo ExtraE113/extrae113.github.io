@@ -21,7 +21,7 @@ Relevant Courses include: AP Computer Science, Data Structures and Algorithms, C
 
 ### Team Sublead, FIRST Robotics, The Athenian School (2018-2020)
 * Worked to coordinate students and help lagging groups and mechanisms get back on track
-* Focused on fixing problems well and quickly as they cropped up towards the end of the season
+* Focused on fixing problems effectively and quickly as they cropped up towards the end of the season
 * Worked as a programmer two years using Java, Python, and ROS
 
 ### CyberPatriot Cybersecurity Competition Team Member, The Athenian School (2018-2019)
