@@ -19,7 +19,7 @@ Relevant Courses include: AP Computer Science, Data Structures and Algorithms, C
     * Relevant skills: AWS Lambda/Serverless, Python, Optomization and Caching 
 
 
-### Team Sublead, FIRST Robotics, The Athenian School (2018-2019)
+### Team Sublead, FIRST Robotics, The Athenian School (2018-2020)
 * Worked to coordinate students and help lagging groups and mechanisms get back on track
 * Focused on fixing problems well and quickly as they cropped up towards the end of the season
 * Worked as a programmer two years using Java, Python, and ROS
