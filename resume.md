@@ -7,8 +7,8 @@ nav-menu: true
 
 ## EDUCATION
 
-The Athenian School, Danville, CA: 2017-2021
-Boston University, Boston, MA: 2021-expected 2025
+The Athenian School, Danville, CA: 2017-2021  
+Boston University, Boston, MA: 2021-expected 2025  
 Relevant Courses include: AP Computer Science, Data Structures and Algorithms, Combinatoric Structures
 
 ## STEM & ENTREPRENEURIAL EXPERIENCE
