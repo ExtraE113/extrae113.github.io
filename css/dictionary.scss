@@ -45,6 +45,11 @@ h1 {
   @media (min-width: $max-width) {
     font-size: $title-size-at-max-width;
   }
+  
+  
+  @media (min-width: 630px) {
+    font-size: 15vh;
+  }
 
   font-size: 18vw;
   line-height: 70%;
