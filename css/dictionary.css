@@ -29,6 +29,11 @@ h1 {
     font-size: 153px;
   }
 }
+@media (min-width: 630px) {
+  h1 {
+    font-size: 15vh;
+  }
+}
 
 h1.needs-some-space-accents {
   padding-top: 0.25em;
