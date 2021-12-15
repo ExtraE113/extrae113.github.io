@@ -1,0 +1,85 @@
+html {
+  font-family: Playfair Display, serif;
+  display: block;
+}
+
+h1 {
+  font-style: normal;
+  font-weight: normal;
+  @media (max-width: 410px) {
+    font-size: 18vw;
+  }
+  font-size: 20vw;
+  line-height: 70%;
+  color: #000000;
+  padding: 8+2px;
+  margin: 0;
+}
+
+div.word-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+}
+
+
+p.part-of-speach {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 8*3px;
+
+  @media (max-width: 410px) {
+    font-size: 8*2px;
+  }
+
+  margin: 0;
+  padding: 8px 16px 8px 8px;
+  display: flex;
+  align-items: flex-end;
+  color: #000000;
+  flex-grow: 2;
+}
+
+p.pronounce {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 8*3px;
+}
+
+
+.inline-block {
+  display: inline-block;
+}
+
+hr {
+  padding: 0;
+  margin: 8px;
+  height: 4px;
+  border-radius: 2px;
+
+  border: none;
+  color: black;
+  background-color: black;
+}
+
+ol {
+  margin: 8*2px;
+  font-size: 8*3px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+body {
+  background-color: #fdfbf7;
+}
+
+p.example-sentence {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 8*2px;
+  line-height: 8*3px;
+color: rgba(0, 0, 0, 0.7);
+  margin: 8px;
+}
