@@ -1,0 +1,151 @@
+@media (prefers-color-scheme: dark) {
+  a {
+    color: #8589F1;
+  }
+}
+html {
+  font-family: Playfair Display, serif;
+  display: block;
+  color: #D8D8D8;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+h1 {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 18vw;
+  line-height: 70%;
+  padding: 10px;
+  margin: 0;
+}
+@media (min-width: 850px) {
+  h1 {
+    font-size: 153px;
+  }
+}
+
+h1.needs-some-space-accents {
+  padding-top: 0.25em;
+}
+
+h1.needs-some-space-long {
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  margin-bottom: 8px;
+}
+
+h3 {
+  margin: 0;
+  padding: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: inline-block;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: "Playfair Display SC", serif;
+}
+
+h4 {
+  margin: 0;
+  padding: 0;
+}
+
+div.word-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+}
+
+p.part-of-speach {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 24px;
+  margin: 0;
+  padding: 8px 16px 8px 8px;
+  display: flex;
+  align-items: flex-end;
+  flex-grow: 2;
+}
+@media (max-width: 410px) {
+  p.part-of-speach {
+    font-size: 16px;
+  }
+}
+
+p.pronounce {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 24px;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+hr {
+  padding: 0;
+  margin: 8px;
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  color: #D8D8D8;
+  background-color: #D8D8D8;
+}
+
+ol, ul {
+  margin: 16px;
+  font-size: 24px;
+}
+
+ul {
+  list-style-type: lower-alpha;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+body {
+  background-color: #171717;
+}
+
+p.example-sentence {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 16px;
+  line-height: 24px;
+  color: #D8D8D8;
+  margin: 8px;
+}
+
+div.main-col {
+  max-width: 850px;
+  margin: auto;
+  width: 100%;
+}
+
+section.page {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  margin-bottom: 20vh;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/*# sourceMappingURL=dictionary.css.map */
