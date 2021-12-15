@@ -35,8 +35,14 @@ h1 {
   margin: 0;
 }
 
-h1.needs-some-space {
+h1.needs-some-space-accents {
   padding-top: 0.25em;
+}
+
+h1.needs-some-space-long {
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  margin-bottom: 8px;
 }
 
 h3 {
@@ -133,6 +139,7 @@ div.main-col {
 section.page {
   min-height: 100vh;
   scroll-snap-align: start;
+  margin-bottom: 20vh;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
