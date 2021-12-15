@@ -1,0 +1,173 @@
+$max-width: 850px;
+
+//found by viewing actual rendered size in a browser when the window is set to max width (with font in vw units)
+$title-size-at-max-width: 153px;
+
+
+$background-color: #fdfbf7;
+$font-color: black;
+$secondary-font-color: rgba(0, 0, 0, 0.7);
+$tag-highlight: rgba(0, 0, 0, 0.2);
+
+
+@media (prefers-color-scheme: dark) {
+  $background-color: #171717 !global;
+  $font-color: #D8D8D8 !global;
+  $secondary-font-color: #D8D8D8 !global;
+  $tag-highlight: rgba(255, 255, 255, 0.2) !global;
+
+  a {
+    color: #8589F1;
+  }
+
+}
+
+
+
+html {
+  //todo (optional) I don't love how scroll locking works on desktop chrome. Consider ditching? It's too fast.
+  font-family: Playfair Display, serif;
+  display: block;
+  color: $font-color;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+h1 {
+  font-style: normal;
+  font-weight: normal;
+  @media (min-width: $max-width) {
+    font-size: $title-size-at-max-width;
+  }
+
+  font-size: 18vw;
+  line-height: 70%;
+  padding: 8+2px;
+  margin: 0;
+}
+
+h1.needs-some-space-accents {
+  padding-top: 0.25em;
+}
+
+h1.needs-some-space-long {
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  margin-bottom: 8px;
+}
+
+h3 {
+  margin: 0;
+  padding: 4px;
+  background-color: $tag-highlight;
+  display: inline-block;
+  border-radius: 4px;
+  font-size: 8*1.5px;
+  font-family: "Playfair Display SC", serif;
+}
+
+h4 {
+  margin: 0;
+  padding: 0;
+
+}
+
+div.word-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+}
+
+
+p.part-of-speach {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 8*3px;
+
+  @media (max-width: 410px) {
+    font-size: 8*2px;
+  }
+
+  margin: 0;
+  padding: 8px 16px 8px 8px;
+  display: flex;
+  align-items: flex-end;
+  flex-grow: 2;
+}
+
+p.pronounce {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 8*3px;
+}
+
+
+.inline-block {
+  display: inline-block;
+}
+
+hr {
+  padding: 0;
+  margin: 8px;
+  height: 4px;
+  border-radius: 2px;
+
+  border: none;
+  color: $font-color;
+  background-color: $font-color;
+}
+
+ol, ul {
+  margin: 8*2px;
+  font-size: 8*3px;
+}
+
+ul {
+  list-style-type: lower-alpha;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+body {
+  background-color: $background-color;
+}
+
+p.example-sentence {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 8*2px;
+  line-height: 8*3px;
+  color: $secondary-font-color;
+  margin: 8px;
+}
+
+div.main-col {
+  max-width: $max-width;
+  margin: auto;
+  width: 100%;
+}
+
+section.page {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  margin-bottom: 20vh;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
