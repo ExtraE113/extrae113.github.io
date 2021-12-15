@@ -1,15 +1,31 @@
 $max-width: 850px;
 
 //found by viewing actual rendered size in a browser when the window is set to max width (with font in vw units)
-$title-size-at-max-width: 170px;
+$title-size-at-max-width: 153px;
 
 
 $background-color: #fdfbf7;
 $font-color: black;
 $secondary-font-color: rgba(0, 0, 0, 0.7);
 $tag-highlight: rgba(0, 0, 0, 0.2);
+
+
+@media (prefers-color-scheme: dark) {
+  $background-color: #171717 !global;
+  $font-color: #D8D8D8 !global;
+  $secondary-font-color: #D8D8D8 !global;
+  $tag-highlight: rgba(255, 255, 255, 0.2) !global;
+
+  a {
+    color: #8589F1;
+  }
+
+}
+
+
+
 html {
-//todo (optional) I don't love how scroll locking works on desktop chrome. Consider ditching? It's too fast.
+  //todo (optional) I don't love how scroll locking works on desktop chrome. Consider ditching? It's too fast.
   font-family: Playfair Display, serif;
   display: block;
   color: $font-color;
@@ -18,18 +34,19 @@ html {
 
 }
 
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
 h1 {
   font-style: normal;
   font-weight: normal;
-  @media (max-width: 410px) {
-    font-size: 18vw;
-  }
-
   @media (min-width: $max-width) {
     font-size: $title-size-at-max-width;
   }
 
-  font-size: 20vw;
+  font-size: 18vw;
   line-height: 70%;
   padding: 8+2px;
   margin: 0;
@@ -60,6 +77,7 @@ h4 {
   padding: 0;
 
 }
+
 div.word-wrap {
   display: flex;
   align-items: baseline;
@@ -134,6 +152,7 @@ p.example-sentence {
 div.main-col {
   max-width: $max-width;
   margin: auto;
+  width: 100%;
 }
 
 section.page {
@@ -149,6 +168,6 @@ section.page {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 * {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
