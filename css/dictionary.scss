@@ -146,10 +146,10 @@ body {
 p.example-sentence {
   font-style: italic;
   font-weight: normal;
-  font-size: 8*2px;
-  line-height: 8*3px;
+  font-size: 8*3px;
+  line-height: 8*4px;
   color: $secondary-font-color;
-  margin: 8px;
+  margin: 32px 8px 8px;
 }
 
 div.main-col {

@@ -121,10 +121,10 @@ body {
 p.example-sentence {
   font-style: italic;
   font-weight: normal;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 24px;
+  line-height: 32px;
   color: #D8D8D8;
-  margin: 8px;
+  margin: 32px 8px 8px;
 }
 
 div.main-col {
