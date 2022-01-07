@@ -1,8 +1,7 @@
-@media (prefers-color-scheme: dark) {
-  a {
-    color: #8589F1;
-  }
+a {
+  color: #8589F1;
 }
+
 html {
   font-family: Playfair Display, serif;
   display: block;
