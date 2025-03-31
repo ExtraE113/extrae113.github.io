@@ -54,24 +54,24 @@ h1 {
   padding: 8+2px;
   margin: 0;
 }
+ol .resume-list {
+  li {
+    // List marker aligns with h4
+    position: relative; // Creates positioning context
+    margin-top: 2em;
 
-li {
-  // List marker aligns with h4
-  position: relative; // Creates positioning context
-  margin-top: 2em;
+    .tag {
+      position: absolute;
+      bottom: 100%; // Positions it above the h4
+      left: 0;
+      margin-bottom: 1px; // Space between tag and h4
+    }
 
-  .tag {
-    position: absolute;
-    bottom: 100%; // Positions it above the h4
-    left: 0;
-    margin-bottom: 1px; // Space between tag and h4
-  }
-
-  p {
-    margin: 10px 0px;
+    p {
+      margin: 10px 0px;
+    }
   }
 }
-
 
 h1.needs-some-space-accents {
   padding-top: 0.25em;

@@ -32,17 +32,17 @@ h1 {
   }
 }
 
-li {
+ol .resume-list li {
   position: relative;
   margin-top: 2em;
 }
-li .tag {
+ol .resume-list li .tag {
   position: absolute;
   bottom: 100%;
   left: 0;
   margin-bottom: 1px;
 }
-li p {
+ol .resume-list li p {
   margin: 10px 0px;
 }
 
