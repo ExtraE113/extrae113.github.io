@@ -6,8 +6,6 @@ html {
   font-family: Playfair Display, serif;
   display: block;
   color: #D8D8D8;
-  scroll-snap-type: y proximity;
-  scroll-behavior: smooth;
 }
 
 html, body {
@@ -32,6 +30,20 @@ h1 {
   h1 {
     font-size: 15vw;
   }
+}
+
+li {
+  position: relative;
+  margin-top: 2em;
+}
+li .tag {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 1px;
+}
+li p {
+  margin: 10px 0px;
 }
 
 h1.needs-some-space-accents {
@@ -146,10 +158,8 @@ section.page {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 * {
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /*# sourceMappingURL=dictionary.css.map */
