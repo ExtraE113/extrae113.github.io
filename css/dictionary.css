@@ -44,6 +44,8 @@ ol.resume-list li .tag {
   bottom: 100%;
   left: 0;
   margin-bottom: 1px;
+    font-size: 0.9em;
+    margin-top: 5px;
 }
 ol.resume-list li p {
   margin: 10px 0px;
