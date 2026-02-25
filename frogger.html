@@ -6,41 +6,46 @@
 <title>Frogger: One Life</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Courier New',monospace;overflow:hidden}
+body{background:#0a0a0a;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Courier New',monospace;overflow:hidden;touch-action:none}
 #wrapper{position:relative;display:flex;flex-direction:column;align-items:center}
-canvas{display:block;image-rendering:pixelated;border:2px solid #333}
-#title-screen,#name-screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;background:rgba(0,0,0,0.92)}
-#title-screen h1{color:#4f4;font-size:3em;text-shadow:0 0 20px #0f0;margin-bottom:10px}
-#title-screen h2{color:#8f8;font-size:1.2em;margin-bottom:30px;font-style:italic}
+canvas{display:block;image-rendering:pixelated;border:2px solid #333;cursor:default}
+#title-screen,#name-screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;background:rgba(0,0,0,0.95)}
+#title-screen h1{color:#4f4;font-size:3.2em;text-shadow:0 0 30px #0f0,0 0 60px rgba(0,255,0,0.3);margin-bottom:6px;letter-spacing:8px}
+#title-screen h2{color:#8f8;font-size:1em;margin-bottom:5px;font-style:italic;opacity:0.8}
+#title-screen .subtitle{color:#f66;font-size:0.85em;margin-bottom:30px;opacity:0.7}
 #name-screen label{color:#4f4;font-size:1.4em;margin-bottom:10px}
-#name-screen input{background:#222;border:2px solid #4f4;color:#4f4;font-family:'Courier New',monospace;font-size:1.2em;padding:8px 16px;text-align:center;outline:none;margin-bottom:20px;width:250px}
-#name-screen input:focus{border-color:#8f8;box-shadow:0 0 10px #0f0}
-.btn{background:#4f4;color:#111;border:none;font-family:'Courier New',monospace;font-size:1.1em;padding:10px 30px;cursor:pointer;font-weight:bold;margin-top:10px}
-.btn:hover{background:#8f8}
-#hud{color:#4f4;font-size:1em;padding:5px 0;display:flex;justify-content:space-between;width:100%;max-width:600px}
+#name-screen input{background:#1a1a1a;border:2px solid #4f4;color:#4f4;font-family:'Courier New',monospace;font-size:1.2em;padding:8px 16px;text-align:center;outline:none;margin-bottom:20px;width:260px;border-radius:4px}
+#name-screen input:focus{border-color:#8f8;box-shadow:0 0 15px rgba(0,255,0,0.3)}
+.btn{background:#4f4;color:#111;border:none;font-family:'Courier New',monospace;font-size:1.1em;padding:12px 36px;cursor:pointer;font-weight:bold;margin-top:10px;border-radius:4px;transition:all 0.15s}
+.btn:hover{background:#8f8;transform:scale(1.05)}
+.btn:active{transform:scale(0.95)}
+#hud{color:#4f4;font-size:0.95em;padding:5px 10px;display:flex;justify-content:space-between;width:100%;max-width:600px;transition:opacity 0.3s}
+#hud.hidden{opacity:0;pointer-events:none}
 #dpad{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20}
-#dpad button{position:absolute;width:60px;height:60px;background:rgba(79,255,79,0.3);border:2px solid rgba(79,255,79,0.5);color:#4f4;font-size:24px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#dpad button:active{background:rgba(79,255,79,0.6)}
-#btn-up{left:65px;top:0}
-#btn-down{left:65px;top:130px}
-#btn-left{left:0;top:65px}
-#btn-right{left:130px;top:65px}
+#dpad button{position:absolute;width:60px;height:60px;background:rgba(79,255,79,0.25);border:2px solid rgba(79,255,79,0.4);color:#4f4;font-size:24px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+#dpad button:active{background:rgba(79,255,79,0.5)}
+#btn-up{left:65px;top:0}#btn-down{left:65px;top:130px}#btn-left{left:0;top:65px}#btn-right{left:130px;top:65px}
 @media(max-width:620px){canvas{width:100vw!important;height:auto!important}#dpad{display:block}}
 </style>
 </head>
 <body>
 <div id="wrapper">
-  <div id="hud"><span id="score-display">Score: 0</span><span id="level-display">Level: 1</span></div>
+  <div id="hud">
+    <span id="score-display">Score: 0</span>
+    <span id="timer-display"></span>
+    <span id="level-display">Level: 1</span>
+  </div>
   <canvas id="game" width="600" height="650"></canvas>
   <div id="title-screen">
     <h1>FROGGER</h1>
     <h2>One Life. No Respawns.</h2>
+    <div class="subtitle">You will not get a second chance.</div>
     <button class="btn" id="start-btn">START</button>
   </div>
   <div id="name-screen" style="display:none">
     <label for="frog-name">Name your frog:</label>
     <input id="frog-name" type="text" maxlength="12" value="Freddy" autofocus>
-    <button class="btn" id="go-btn">GO</button>
+    <button class="btn" id="go-btn">HOP TO IT</button>
   </div>
   <div id="dpad">
     <button id="btn-up">&#9650;</button>
@@ -50,122 +55,318 @@ canvas{display:block;image-rendering:pixelated;border:2px solid #333}
   </div>
 </div>
 <script>
-// ===== GAME CONSTANTS =====
+// ============================================================
+// CONSTANTS & SETUP
+// ============================================================
 const W=600,H=650,COLS=15,ROWS=13,CW=W/COLS,RH=H/ROWS;
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 const titleScreen=document.getElementById('title-screen');
 const nameScreen=document.getElementById('name-screen');
 const scoreDisplay=document.getElementById('score-display');
 const levelDisplay=document.getElementById('level-display');
+const timerDisplay=document.getElementById('timer-display');
+const hud=document.getElementById('hud');
 
-// Audio
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
 const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-function playTone(freq,dur,type='square',vol=0.1){
-  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.type=type;o.frequency.value=freq;g.gain.value=vol;
-  o.connect(g);g.connect(audioCtx.destination);
-  o.start();g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
-  o.stop(audioCtx.currentTime+dur);
+function playTone(freq,dur,type='square',vol=0.08){
+  try{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type;o.frequency.value=freq;g.gain.value=vol;
+    o.connect(g);g.connect(audioCtx.destination);
+    o.start(audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+    o.stop(audioCtx.currentTime+dur+0.05);
+  }catch(e){}
 }
-function sfxHop(){playTone(400,0.08);setTimeout(()=>playTone(600,0.06),50)}
-function sfxSplat(){playTone(100,0.3,'sawtooth',0.15);playTone(80,0.4,'triangle',0.1)}
-function sfxSplash(){playTone(200,0.2,'sine',0.1);setTimeout(()=>playTone(150,0.3,'sine',0.08),100)}
-function sfxScore(){playTone(500,0.1);setTimeout(()=>playTone(700,0.1),100);setTimeout(()=>playTone(900,0.15),200)}
-function sfxSad(){playTone(300,0.4,'sine',0.08);setTimeout(()=>playTone(250,0.4,'sine',0.08),400);setTimeout(()=>playTone(200,0.6,'sine',0.08),800)}
+function sfxHop(){playTone(440,0.06,'square',0.06);setTimeout(()=>playTone(660,0.05,'square',0.05),40)}
+function sfxSplat(){
+  playTone(80,0.4,'sawtooth',0.12);playTone(60,0.5,'triangle',0.08);
+  setTimeout(()=>playTone(40,0.3,'sawtooth',0.06),100);
+}
+function sfxSplash(){
+  playTone(220,0.15,'sine',0.08);
+  setTimeout(()=>playTone(180,0.2,'sine',0.06),80);
+  setTimeout(()=>playTone(140,0.25,'sine',0.04),160);
+}
+function sfxScore(){playTone(523,0.08,'square',0.06);setTimeout(()=>playTone(659,0.08,'square',0.06),80);setTimeout(()=>playTone(784,0.12,'square',0.07),160)}
+function sfxLevelUp(){
+  [523,587,659,698,784,880].forEach((f,i)=>{
+    setTimeout(()=>playTone(f,0.12,'square',0.06),i*60);
+  });
+}
+// Sad descending melody for death
+function sfxSadMelody(){
+  const notes=[392,349,330,294,262,247,220,196];
+  notes.forEach((f,i)=>{
+    setTimeout(()=>playTone(f,0.5,'sine',0.06),i*500);
+  });
+}
+// Funeral organ-like drone
+let funeralDroneNode=null;
+function startFuneralDrone(){
+  if(funeralDroneNode)return;
+  try{
+    funeralDroneNode=audioCtx.createGain();
+    funeralDroneNode.gain.value=0.03;
+    funeralDroneNode.connect(audioCtx.destination);
+    [130.81,164.81,196].forEach(f=>{
+      const o=audioCtx.createOscillator();
+      o.type='sine';o.frequency.value=f;
+      o.connect(funeralDroneNode);o.start();
+      o._fdn=true;
+    });
+  }catch(e){}
+}
+function stopFuneralDrone(){
+  if(funeralDroneNode){
+    funeralDroneNode.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+1);
+    setTimeout(()=>{try{funeralDroneNode.disconnect();}catch(e){}funeralDroneNode=null;},1200);
+  }
+}
 
-// Game state
+// ============================================================
+// PARTICLE SYSTEM
+// ============================================================
+let particles=[];
+function spawnParticle(x,y,vx,vy,life,color,size,type){
+  particles.push({x,y,vx,vy,life,maxLife:life,color,size:size||3,type:type||'dot'});
+}
+function spawnScorePopup(x,y,text){
+  particles.push({x,y,vx:0,vy:-40,life:1.2,maxLife:1.2,color:'#ff0',size:14,type:'text',text:text});
+}
+function spawnSplash(x,y){
+  for(let i=0;i<12;i++){
+    const a=Math.random()*Math.PI*2;
+    spawnParticle(x,y,Math.cos(a)*60+Math.random()*20,Math.sin(a)*40-30,0.6+Math.random()*0.3,'rgba(100,180,255,0.8)',2+Math.random()*2);
+  }
+}
+function spawnExplosion(x,y){
+  for(let i=0;i<20;i++){
+    const a=Math.random()*Math.PI*2;
+    const s=40+Math.random()*60;
+    spawnParticle(x,y,Math.cos(a)*s,Math.sin(a)*s-20,0.5+Math.random()*0.5,
+      ['#f44','#f80','#ff0','#fa0'][Math.floor(Math.random()*4)],2+Math.random()*3);
+  }
+  // Green bits (frog parts... dark humor)
+  for(let i=0;i<8;i++){
+    const a=Math.random()*Math.PI*2;
+    spawnParticle(x,y,Math.cos(a)*30,Math.sin(a)*30-40,0.8,'#3c3',3+Math.random()*2);
+  }
+}
+function spawnLevelUp(){
+  for(let i=0;i<30;i++){
+    spawnParticle(Math.random()*W,H+10,
+      (Math.random()-0.5)*30,-80-Math.random()*60,
+      1+Math.random()*0.5,
+      ['#4f4','#ff0','#4ff','#f4f'][Math.floor(Math.random()*4)],
+      2+Math.random()*3);
+  }
+}
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    if(p.type!=='text')p.vy+=120*dt; // gravity (not on text)
+    p.life-=dt;
+    if(p.life<=0)particles.splice(i,1);
+  }
+}
+function drawParticles(){
+  for(const p of particles){
+    const a=Math.max(0,p.life/p.maxLife);
+    ctx.globalAlpha=a;
+    if(p.type==='text'){
+      ctx.fillStyle=p.color;ctx.font=`bold ${p.size}px Courier New`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(p.text,p.x,p.y);
+    }else{
+      ctx.fillStyle=p.color;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size*a,0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+}
+
+// ============================================================
+// FADE TRANSITION SYSTEM
+// ============================================================
+let fadeState='none'; // 'none','out','hold','in'
+let fadeAlpha=0,fadeDur=0.5,fadeHold=0.1,fadeTimer=0;
+let fadeCallback=null;
+function startFade(cb,dur){
+  fadeState='out';fadeAlpha=0;fadeDur=dur||0.5;fadeTimer=0;fadeCallback=cb;
+}
+function updateFade(dt){
+  if(fadeState==='none')return;
+  fadeTimer+=dt;
+  if(fadeState==='out'){
+    fadeAlpha=Math.min(1,fadeTimer/fadeDur);
+    if(fadeAlpha>=1){fadeState='hold';fadeTimer=0;if(fadeCallback)fadeCallback();fadeCallback=null;}
+  }else if(fadeState==='hold'){
+    if(fadeTimer>fadeHold){fadeState='in';fadeTimer=0;}
+  }else if(fadeState==='in'){
+    fadeAlpha=1-Math.min(1,fadeTimer/fadeDur);
+    if(fadeAlpha<=0){fadeState='none';fadeAlpha=0;}
+  }
+}
+function drawFade(){
+  if(fadeState==='none')return;
+  ctx.fillStyle=`rgba(0,0,0,${fadeAlpha})`;
+  ctx.fillRect(-10,-10,W+20,H+20);
+}
+
+// ============================================================
+// TYPEWRITER TEXT SYSTEM
+// ============================================================
+let twTexts=[];
+function typewrite(text,x,y,font,color,speed,delay){
+  twTexts.push({text,x,y,font,color,speed:speed||40,delay:delay||0,progress:0,timer:0,started:false,done:false});
+}
+function clearTypewriter(){twTexts=[];}
+function updateTypewriter(dt){
+  for(const tw of twTexts){
+    if(!tw.started){tw.delay-=dt;if(tw.delay<=0)tw.started=true;continue;}
+    tw.timer+=dt;
+    tw.progress=Math.min(tw.text.length,Math.floor(tw.timer*tw.speed));
+    if(tw.progress>=tw.text.length)tw.done=true;
+  }
+}
+function drawTypewriter(){
+  for(const tw of twTexts){
+    if(!tw.started)continue;
+    const shown=tw.text.substring(0,tw.progress);
+    ctx.font=tw.font;ctx.fillStyle=tw.color;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    // Background box
+    const m=ctx.measureText(tw.text);
+    ctx.fillStyle='rgba(0,0,0,0.65)';
+    ctx.fillRect(tw.x-m.width/2-12,tw.y-14,m.width+24,32);
+    ctx.fillStyle=tw.color;
+    ctx.fillText(shown,tw.x,tw.y);
+    // Blinking cursor
+    if(!tw.done&&Math.floor(tw.timer*4)%2===0){
+      const cm=ctx.measureText(shown);
+      ctx.fillRect(tw.x+cm.width/2+2,tw.y-8,2,16);
+    }
+  }
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
 let frogName='Freddy';
-let gameState='title'; // title, naming, playing, dying, cutscene, gameover
+let gameState='title'; // title,naming,playing,dying,cutscene,gameover
 let score=0,level=1,difficulty=1;
-let frog={x:7,y:12,px:7*CW,py:12*RH,hopping:false,hopT:0,hopFrom:{x:0,y:0}};
+let frog={x:7,y:12,px:7*CW,py:12*RH,hopping:false,hopT:0,hopFrom:{x:0,y:0},dir:0,squash:1};
 let goalSlots=[false,false,false,false,false];
-let goalPositions=[1,4,7,10,13];
-let animTime=0,shakeX=0,shakeY=0;
+const goalPositions=[1,4,7,10,13];
+let animTime=0,shakeX=0,shakeY=0,shakeMag=0;
+let maxYReached=12;
+let timeSurvived=0,timeStarted=0;
+let levelUpFlash=0;
+// Timer per crossing
+let crossingTimer=0;
+const CROSSING_TIME=30; // seconds per crossing attempt
 
 // Death sequence
-let deathScene=0,deathTimer=0,deathSubScene=0,fadeAlpha=0;
-let deathCause='car'; // 'car' or 'water'
+let deathScene=-1,deathTimer=0,deathSubScene=0;
+let deathCause='car';
+let sceneInitialized=false;
+// Pre-computed star positions for montage movie scene
+const movieStars=[];for(let i=0;i<25;i++)movieStars.push({x:120+Math.random()*(W-240),y:85+Math.random()*65,s:0.8+Math.random()*1.5,b:Math.random()});
 
-// Lane data: type, objects, speed, direction
+// Lanes
 let lanes=[];
 
 function initLanes(){
   lanes=[];
-  const sp=0.5+difficulty*0.15;
+  const sp=0.6+difficulty*0.18;
   // Row 0: goal
   lanes.push({type:'goal',objects:[]});
-  // Rows 1-5: water
+  // Rows 1-5: water (mix of logs and turtles)
   lanes.push({type:'water',objects:makeLogs(3,2.5*CW,sp*0.8,1)});
-  lanes.push({type:'water',objects:makeLogs(3,3.5*CW,sp*0.6,-1)});
-  lanes.push({type:'water',objects:makeLogs(4,2*CW,sp*1.0,1)});
-  lanes.push({type:'water',objects:makeLogs(2,4*CW,sp*0.5,-1)});
-  lanes.push({type:'water',objects:makeLogs(3,3*CW,sp*0.7,1)});
+  lanes.push({type:'water',objects:makeTurtles(4,2*CW,sp*0.6,-1)});
+  lanes.push({type:'water',objects:makeLogs(3,3*CW,sp*1.0,1)});
+  lanes.push({type:'water',objects:makeTurtles(3,2.5*CW,sp*0.5,-1)});
+  lanes.push({type:'water',objects:makeLogs(2,4*CW,sp*0.7,1)});
   // Row 6: median
   lanes.push({type:'safe',objects:[]});
-  // Rows 7-11: road
-  lanes.push({type:'road',objects:makeCars(3,CW*1.5,sp*1.2,-1,'#e44')});
-  lanes.push({type:'road',objects:makeCars(2,CW*2.5,sp*0.7,1,'#ff0')});
-  lanes.push({type:'road',objects:makeCars(3,CW*1.2,sp*1.5,-1,'#f80')});
-  lanes.push({type:'road',objects:makeCars(2,CW*2,sp*0.9,1,'#88f')});
-  lanes.push({type:'road',objects:makeCars(4,CW,sp*1.8,-1,'#f4f')});
+  // Rows 7-11: road (varied vehicle types)
+  lanes.push({type:'road',objects:makeCars(3,CW*1.4,sp*1.1,-1,'#e44','car')});
+  lanes.push({type:'road',objects:makeCars(2,CW*3,sp*0.55,1,'#44e','truck')});
+  lanes.push({type:'road',objects:makeCars(4,CW*0.9,sp*1.7,-1,'#fa0','racer')});
+  lanes.push({type:'road',objects:makeCars(2,CW*2.5,sp*0.7,1,'#e8e','truck')});
+  lanes.push({type:'road',objects:makeCars(3,CW*1.2,sp*1.4,-1,'#f4f','car')});
   // Row 12: start
   lanes.push({type:'safe',objects:[]});
 }
 
 function makeLogs(count,logW,speed,dir){
-  const objs=[];
-  const spacing=W/count;
+  const objs=[];const spacing=W/count;
+  for(let i=0;i<count;i++)objs.push({x:i*spacing,w:logW,speed:speed*dir,kind:'log'});
+  return objs;
+}
+function makeTurtles(count,tW,speed,dir){
+  const objs=[];const spacing=W/count;
   for(let i=0;i<count;i++){
-    objs.push({x:i*spacing,w:logW,speed:speed*dir});
+    objs.push({x:i*spacing,w:tW,speed:speed*dir,kind:'turtle',
+      diveTimer:Math.random()*6,diving:false,divePhase:0});
   }
   return objs;
 }
-function makeCars(count,carW,speed,dir,color){
-  const objs=[];
-  const spacing=W/count;
+function makeCars(count,carW,speed,dir,color,kind){
+  const objs=[];const spacing=W/count;
   for(let i=0;i<count;i++){
-    objs.push({x:i*spacing+Math.random()*40,w:carW,speed:speed*dir,color:color});
+    objs.push({x:i*spacing+(Math.random()*20-10),w:carW,speed:speed*dir,color,kind:kind||'car'});
   }
   return objs;
 }
 
 function resetFrog(){
-  frog.x=7;frog.y=12;frog.px=7*CW;frog.py=12*RH;frog.hopping=false;frog.hopT=0;
-  maxYReached=12;
+  frog.x=7;frog.y=12;frog.px=7*CW;frog.py=12*RH;
+  frog.hopping=false;frog.hopT=0;frog.dir=0;frog.squash=1;
+  maxYReached=12;crossingTimer=CROSSING_TIME;
 }
-
 function resetGame(){
-  score=0;level=1;difficulty=1;
+  score=0;level=1;difficulty=1;particles=[];
   goalSlots=[false,false,false,false,false];
   resetFrog();initLanes();
   scoreDisplay.textContent='Score: 0';
   levelDisplay.textContent='Level: 1';
+  hud.classList.remove('hidden');
+  timeStarted=performance.now()/1000;timeSurvived=0;
 }
 
-// ===== INPUT =====
-const keys={};
+// ============================================================
+// INPUT
+// ============================================================
 document.addEventListener('keydown',e=>{
   if(audioCtx.state==='suspended')audioCtx.resume();
   if(gameState==='playing'&&!frog.hopping){
-    if(e.key==='ArrowUp'||e.key==='w'){e.preventDefault();moveFrog(0,-1);}
-    else if(e.key==='ArrowDown'||e.key==='s'){e.preventDefault();moveFrog(0,1);}
-    else if(e.key==='ArrowLeft'||e.key==='a'){e.preventDefault();moveFrog(-1,0);}
-    else if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();moveFrog(1,0);}
+    if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();moveFrog(0,-1);}
+    else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();moveFrog(0,1);}
+    else if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();moveFrog(-1,0);}
+    else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();moveFrog(1,0);}
   }
-  if(gameState==='gameover'&&deathScene>=6){
-    restartToTitle();
-  }
+  if(gameState==='gameover'&&deathScene>=6){restartToTitle();}
+  // Space/Enter to skip cutscene
+  if((e.key===' '||e.key==='Enter')&&gameState==='cutscene'){skipScene();}
 });
-canvas.addEventListener('click',()=>{
+// Click/tap anywhere to restart from gameover, or skip cutscene
+document.addEventListener('click',()=>{
   if(audioCtx.state==='suspended')audioCtx.resume();
   if(gameState==='gameover'&&deathScene>=6)restartToTitle();
+  if(gameState==='cutscene'&&deathTimer>1)skipScene();
 });
 
 // Touch d-pad
 ['up','down','left','right'].forEach(dir=>{
   const btn=document.getElementById('btn-'+dir);
   btn.addEventListener('touchstart',e=>{
-    e.preventDefault();
+    e.preventDefault();e.stopPropagation();
     if(audioCtx.state==='suspended')audioCtx.resume();
     if(gameState==='playing'&&!frog.hopping){
       if(dir==='up')moveFrog(0,-1);
@@ -176,19 +377,55 @@ canvas.addEventListener('click',()=>{
   });
 });
 
-let maxYReached=12;
+// Swipe controls for mobile
+let touchStartX=0,touchStartY=0,touchId=null;
+canvas.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){
+    touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;touchId=e.touches[0].identifier;
+  }
+},{passive:true});
+canvas.addEventListener('touchend',e=>{
+  for(const t of e.changedTouches){
+    if(t.identifier===touchId&&gameState==='playing'&&!frog.hopping){
+      const dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>25){
+        if(Math.abs(dx)>Math.abs(dy)){moveFrog(dx>0?1:-1,0);}
+        else{moveFrog(0,dy>0?1:-1);}
+      }
+      touchId=null;
+    }
+  }
+},{passive:true});
+
 function moveFrog(dx,dy){
   const nx=frog.x+dx,ny=frog.y+dy;
   if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return;
   frog.hopping=true;frog.hopT=0;
   frog.hopFrom={x:frog.px,y:frog.py};
   frog.x=nx;frog.y=ny;
-  // Score for forward progress
-  if(ny<maxYReached){score+=(maxYReached-ny)*10;maxYReached=ny;scoreDisplay.textContent='Score: '+score;}
+  frog.dir=dy<0?0:dy>0?2:dx<0?3:1; // 0=up,1=right,2=down,3=left
+  if(ny<maxYReached){
+    const pts=(maxYReached-ny)*10;
+    score+=pts;maxYReached=ny;
+    scoreDisplay.textContent='Score: '+score;
+    spawnScorePopup(frog.px+CW/2,frog.py,'+'+pts);
+  }
   sfxHop();
 }
 
-// ===== TITLE / NAME SCREENS =====
+function skipScene(){
+  // Advance to next scene immediately
+  if(deathScene<5){
+    startFade(()=>{
+      deathScene++;deathTimer=0;sceneInitialized=false;clearTypewriter();
+    },0.3);
+  }
+}
+
+// ============================================================
+// TITLE / NAME SCREENS
+// ============================================================
 document.getElementById('start-btn').addEventListener('click',()=>{
   if(audioCtx.state==='suspended')audioCtx.resume();
   titleScreen.style.display='none';
@@ -196,155 +433,277 @@ document.getElementById('start-btn').addEventListener('click',()=>{
   document.getElementById('frog-name').focus();
 });
 document.getElementById('go-btn').addEventListener('click',startGame);
-document.getElementById('frog-name').addEventListener('keydown',e=>{
-  if(e.key==='Enter')startGame();
-});
+document.getElementById('frog-name').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
 
 function startGame(){
   frogName=document.getElementById('frog-name').value.trim()||'Freddy';
   nameScreen.style.display='none';
-  resetGame();
-  gameState='playing';
+  resetGame();gameState='playing';
 }
 function restartToTitle(){
-  gameState='title';deathScene=0;deathTimer=0;deathSubScene=0;fadeAlpha=0;
+  gameState='title';deathScene=-1;deathTimer=0;deathSubScene=0;
+  fadeState='none';fadeAlpha=0;sceneInitialized=false;
+  clearTypewriter();stopFuneralDrone();particles=[];
   titleScreen.style.display='flex';
+  hud.classList.remove('hidden');
 }
 
-// ===== UPDATE =====
+// ============================================================
+// UPDATE
+// ============================================================
 function update(dt){
+  updateFade(dt);
+  updateParticles(dt);
+
   if(gameState==='playing'){
-    animTime+=dt;
-    // Update hop animation
+    timeSurvived=performance.now()/1000-timeStarted;
+
+    // Crossing timer
+    crossingTimer-=dt;
+    if(crossingTimer<=0){deathCause='time';die();}
+
+    // Update shake
+    if(shakeMag>0){
+      shakeMag*=0.9;
+      shakeX=(Math.random()-0.5)*shakeMag;shakeY=(Math.random()-0.5)*shakeMag;
+      if(shakeMag<0.5){shakeMag=0;shakeX=0;shakeY=0;}
+    }
+
+    // Level up flash
+    if(levelUpFlash>0)levelUpFlash-=dt*2;
+
+    // Hop animation with squash/stretch
     if(frog.hopping){
-      frog.hopT+=dt*5;
-      if(frog.hopT>=1){frog.hopT=1;frog.hopping=false;frog.px=frog.x*CW;frog.py=frog.y*RH;}
-      else{
+      frog.hopT+=dt*5.5;
+      if(frog.hopT>=1){
+        frog.hopT=1;frog.hopping=false;
+        frog.px=frog.x*CW;frog.py=frog.y*RH;frog.squash=1;
+      }else{
         frog.px=frog.hopFrom.x+(frog.x*CW-frog.hopFrom.x)*frog.hopT;
         frog.py=frog.hopFrom.y+(frog.y*RH-frog.hopFrom.y)*frog.hopT;
+        // Squash at start and end, stretch in middle
+        const t=frog.hopT;
+        frog.squash=t<0.2?1+t*2:t>0.8?1+(1-t)*2:0.8;
       }
     }
+
     // Update lane objects
-    const spd=dt*60; // normalize to ~60fps
+    const spd=dt*60;
     for(let r=0;r<lanes.length;r++){
       const lane=lanes[r];
       for(const obj of lane.objects){
         obj.x+=obj.speed*spd;
         if(obj.speed>0&&obj.x>W)obj.x=-obj.w;
         if(obj.speed<0&&obj.x+obj.w<0)obj.x=W;
+        // Turtle diving
+        if(obj.kind==='turtle'){
+          obj.diveTimer-=dt;
+          if(obj.diveTimer<=0){
+            obj.diving=!obj.diving;
+            obj.diveTimer=obj.diving?(1.5+Math.random()):(4+Math.random()*3);
+          }
+          obj.divePhase=obj.diving?Math.min(1,obj.divePhase+dt*3):Math.max(0,obj.divePhase-dt*3);
+        }
       }
     }
-    // Check if frog is on water - move with log
+
+    // Water collision (only when not hopping)
     if(!frog.hopping&&frog.y>=1&&frog.y<=5){
       const lane=lanes[frog.y];
-      let onLog=false;
-      const fx=frog.px+CW/2,fy=frog.y*RH+RH/2;
+      let onPlatform=false;
+      const fx=frog.px+CW/2;
       for(const obj of lane.objects){
+        // Skip fully-submerged turtles
+        if(obj.kind==='turtle'&&obj.divePhase>0.8)continue;
         if(fx>=obj.x&&fx<=obj.x+obj.w){
-          onLog=true;
+          onPlatform=true;
           frog.px+=obj.speed*spd;
           frog.x=Math.round(frog.px/CW);
           break;
         }
       }
-      if(!onLog){deathCause='water';die();}
-      if(frog.px<-CW||frog.px>W){deathCause='water';die();}
+      if(!onPlatform){deathCause='water';die();}
+      else if(frog.px<-CW||frog.px>W){deathCause='water';die();}
     }
-    // Check car collision
+
+    // Car collision
     if(!frog.hopping&&frog.y>=7&&frog.y<=11){
       const lane=lanes[frog.y];
-      const fx=frog.px,fy=frog.y*RH;
       for(const obj of lane.objects){
-        if(fx+CW*0.7>obj.x&&fx+CW*0.3<obj.x+obj.w){
+        if(frog.px+CW*0.7>obj.x&&frog.px+CW*0.3<obj.x+obj.w){
           deathCause='car';die();break;
         }
       }
     }
-    // Check goal
+
+    // Goal check
     if(!frog.hopping&&frog.y===0){
       let scored=false;
       for(let i=0;i<goalPositions.length;i++){
         if(!goalSlots[i]&&Math.abs(frog.x-goalPositions[i])<=1){
           goalSlots[i]=true;scored=true;
-          score+=100+level*50;
+          const pts=100+level*50+Math.floor(crossingTimer)*5;
+          score+=pts;
           scoreDisplay.textContent='Score: '+score;
           sfxScore();
+          spawnScorePopup(goalPositions[i]*CW+CW/2,RH/2,'+'+pts);
           break;
         }
       }
       if(!scored){deathCause='water';die();}
       else{
-        // Check if all goals filled
         if(goalSlots.every(s=>s)){
-          level++;difficulty+=0.5;
+          level++;difficulty+=0.4;
           levelDisplay.textContent='Level: '+level;
           goalSlots=[false,false,false,false,false];
-          initLanes();
+          initLanes();sfxLevelUp();spawnLevelUp();
+          levelUpFlash=1;
         }
         resetFrog();
       }
     }
+
+    // Timer display
+    const tSec=Math.max(0,Math.ceil(crossingTimer));
+    timerDisplay.textContent=tSec<=10?'TIME: '+tSec:'';
+    if(tSec<=5)timerDisplay.style.color='#f44';
+    else timerDisplay.style.color='#4f4';
   }
   else if(gameState==='dying'||gameState==='cutscene'){
     deathTimer+=dt;
+    updateTypewriter(dt);
     updateDeathSequence(dt);
   }
 }
 
 function die(){
   if(gameState!=='playing')return;
-  gameState='dying';deathScene=0;deathTimer=0;fadeAlpha=0;deathSubScene=0;
-  if(deathCause==='car')sfxSplat();else sfxSplash();
-  sfxSad();
+  timeSurvived=performance.now()/1000-timeStarted;
+  gameState='dying';deathScene=0;deathTimer=0;deathSubScene=0;
+  sceneInitialized=false;clearTypewriter();
+  hud.classList.add('hidden');
+
+  // Death effects
+  const dx=frog.px+CW/2,dy=frog.py+RH/2;
+  if(deathCause==='car'){sfxSplat();spawnExplosion(dx,dy);shakeMag=15;}
+  else if(deathCause==='water'){sfxSplash();spawnSplash(dx,dy);}
+  else{sfxSplat();shakeMag=10;} // time ran out
+
+  sfxSadMelody();
 }
 
-// ===== DEATH SEQUENCE =====
+// ============================================================
+// DEATH SEQUENCE STATE MACHINE
+// ============================================================
 function updateDeathSequence(dt){
+  // Shake decay during dying
+  if(shakeMag>0){
+    shakeMag*=0.92;
+    shakeX=(Math.random()-0.5)*shakeMag;shakeY=(Math.random()-0.5)*shakeMag;
+    if(shakeMag<0.3){shakeMag=0;shakeX=0;shakeY=0;}
+  }
+
   if(deathScene===0){
-    // Scene 1: Death impact - 4s
-    if(deathTimer<0.3){shakeX=(Math.random()-0.5)*10;shakeY=(Math.random()-0.5)*10;}
-    else{shakeX=0;shakeY=0;}
-    if(deathTimer>4){deathScene=1;deathTimer=0;gameState='cutscene';}
+    // Death impact - 5s
+    if(!sceneInitialized){sceneInitialized=true;shakeMag=12;}
+    if(deathTimer>5&&fadeState==='none'){
+      startFade(()=>{deathScene=1;deathTimer=0;sceneInitialized=false;clearTypewriter();gameState='cutscene';startFuneralDrone();},0.6);
+    }
   }
   else if(deathScene===1){
-    // Scene 2: Family gets news - 8s
-    if(deathTimer>8){deathScene=2;deathTimer=0;}
+    // Family gets news - 10s
+    if(!sceneInitialized){
+      sceneInitialized=true;
+      typewrite(`"Mrs. ${frogName}... I'm so sorry."`,W/2,H*0.12,'bold 20px Courier New','#fff',30,1.5);
+      typewrite('"Mommy, where\'s Daddy?"',W/2,H*0.88,'italic 19px Courier New','#ffda80',25,5);
+    }
+    if(deathTimer>10&&fadeState==='none'){
+      startFade(()=>{deathScene=2;deathTimer=0;sceneInitialized=false;clearTypewriter();},0.6);
+    }
   }
   else if(deathScene===2){
-    // Scene 3: Funeral - 8s
-    if(deathTimer>8){deathScene=3;deathTimer=0;}
+    // Funeral - 10s
+    if(!sceneInitialized){
+      sceneInitialized=true;
+      typewrite(`"${frogName} was my best friend."`,W/2,H*0.80,'italic 18px Courier New','#ddd',25,3);
+      typewrite('"They had so much to live for."',W/2,H*0.88,'italic 18px Courier New','#ddd',25,6);
+    }
+    if(deathTimer>10&&fadeState==='none'){
+      startFade(()=>{deathScene=3;deathTimer=0;sceneInitialized=false;clearTypewriter();},0.6);
+    }
   }
   else if(deathScene===3){
-    // Scene 4: Naming - 6s
-    if(deathTimer>6){deathScene=4;deathTimer=0;deathSubScene=0;}
+    // Naming - 8s
+    if(!sceneInitialized){
+      sceneInitialized=true;
+      typewrite(`"I'm naming them ${frogName}."`,W/2,H*0.73,'italic 19px Courier New','#333',28,2.5);
+      typewrite('"After the bravest, dumbest frog I ever knew."',W/2,H*0.81,'italic 17px Courier New','#555',25,4.5);
+    }
+    if(deathTimer>8&&fadeState==='none'){
+      startFade(()=>{deathScene=4;deathTimer=0;deathSubScene=0;sceneInitialized=false;clearTypewriter();stopFuneralDrone();},0.6);
+    }
   }
   else if(deathScene===4){
-    // Scene 5: Montage - 21s (6 sub-scenes x 3.5s)
-    deathSubScene=Math.min(5,Math.floor(deathTimer/3.5));
-    if(deathTimer>21){deathScene=5;deathTimer=0;}
+    // Montage - 24s (6 sub-scenes x 4s)
+    const newSub=Math.min(5,Math.floor(deathTimer/4));
+    if(newSub!==deathSubScene){deathSubScene=newSub;sceneInitialized=false;clearTypewriter();}
+    if(!sceneInitialized){
+      sceneInitialized=true;
+      const texts=[
+        'The movie you waited 10 years for. It was incredible.',
+        'Your favorite band, back together. The concert was legendary.',
+        'One small hop for frog, one giant leap for frogkind.',
+        'Your daughter graduated top of her class. She wished you were there.',
+        "Your wife found love again. He's a really nice toad named Gerald.",
+        `Little ${frogName} Jr. said their first word. It was "Daddy."`
+      ];
+      typewrite(texts[deathSubScene],W/2,H-38,'16px Courier New','#fff',35,0.5);
+    }
+    if(deathTimer>24&&fadeState==='none'){
+      startFade(()=>{deathScene=5;deathTimer=0;sceneInitialized=false;clearTypewriter();},0.8);
+    }
   }
   else if(deathScene===5){
-    // Scene 6: Final - stays
-    if(deathTimer>8){deathScene=6;gameState='gameover';}
+    // Final - stays until click
+    if(!sceneInitialized){sceneInitialized=true;}
+    if(deathTimer>9){deathScene=6;gameState='gameover';}
   }
 }
 
-// ===== DRAW =====
+// ============================================================
+// DRAW - MAIN
+// ============================================================
 function draw(){
   ctx.save();
   ctx.translate(shakeX,shakeY);
 
-  if(gameState==='playing'||gameState==='dying'&&deathTimer<0.5){
+  // Clear with black (prevents corner bleed during shake)
+  ctx.fillStyle='#0a0a0a';ctx.fillRect(-20,-20,W+40,H+40);
+
+  if(gameState==='title'){
+    drawTitleAnimation();
+  }
+  else if(gameState==='playing'){
     drawGame();
-    if(gameState==='dying'){
-      // Flash red
-      const a=deathTimer<0.15?0.6:Math.max(0,(0.5-deathTimer)*2);
-      ctx.fillStyle=`rgba(255,0,0,${a})`;
+    drawParticles();
+    // Level up flash overlay
+    if(levelUpFlash>0){
+      ctx.fillStyle=`rgba(255,255,200,${levelUpFlash*0.3})`;
       ctx.fillRect(0,0,W,H);
     }
+    // Timer bar at top
+    drawTimerBar();
   }
   else if(gameState==='dying'){
-    drawDeathScene0();
+    if(deathTimer<0.6){
+      drawGame();
+      drawParticles();
+      // Red flash
+      const a=deathTimer<0.1?0.7:Math.max(0,(0.6-deathTimer)/0.5*0.5);
+      ctx.fillStyle=`rgba(255,0,0,${a})`;ctx.fillRect(0,0,W,H);
+    }else{
+      drawDeathScene0();
+    }
   }
   else if(gameState==='cutscene'||gameState==='gameover'){
     if(deathScene===1)drawDeathScene1();
@@ -352,186 +711,332 @@ function draw(){
     else if(deathScene===3)drawDeathScene3();
     else if(deathScene===4)drawDeathScene4();
     else if(deathScene>=5)drawDeathScene5();
+
+    // Skip prompt
+    if(gameState==='cutscene'&&deathScene<5&&deathTimer>2){
+      const a=0.3+Math.sin(animTime*2)*0.15;
+      ctx.fillStyle=`rgba(255,255,255,${a})`;
+      ctx.font='12px Courier New';ctx.textAlign='center';
+      ctx.fillText('click or press space to skip',W/2,H-8);
+    }
   }
+
+  drawFade();
   ctx.restore();
 }
 
+function drawTimerBar(){
+  const pct=Math.max(0,crossingTimer/CROSSING_TIME);
+  const barW=W-20;
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(10,2,barW,4);
+  const col=pct>0.3?`hsl(${pct*120},80%,50%)`:'#f33';
+  ctx.fillStyle=col;ctx.fillRect(10,2,barW*pct,4);
+}
+
+// ============================================================
+// DRAW - TITLE SCREEN ANIMATION
+// ============================================================
+function drawTitleAnimation(){
+  // Animated background - scrolling road
+  const t=animTime;
+  ctx.fillStyle='#1a4a8a';ctx.fillRect(0,0,W,H*0.35);
+  ctx.fillStyle='#2a5a2a';ctx.fillRect(0,H*0.35,W,H*0.08);
+  ctx.fillStyle='#333';ctx.fillRect(0,H*0.43,W,H*0.35);
+  ctx.fillStyle='#2a5a2a';ctx.fillRect(0,H*0.78,W,H*0.22);
+
+  // Road dashes scrolling
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([20,20]);
+  for(let i=0;i<4;i++){
+    const y=H*0.43+H*0.35/4*(i+0.5);
+    ctx.beginPath();
+    ctx.lineDashOffset=-t*60;
+    ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+  }
+  ctx.setLineDash([]);ctx.lineDashOffset=0;
+
+  // Cars scrolling across
+  for(let i=0;i<6;i++){
+    const lane=i;const dir=lane%2===0?1:-1;
+    const y=H*0.43+H*0.35/4*(lane/1.5)+10;
+    const x=((t*80*(0.5+lane*0.2)*dir+lane*150)%((W+100))-50);
+    drawCar(x,y,CW*1.5,RH*0.6,['#e44','#44e','#fa0','#4f4','#f4f','#ff0'][i],dir<0);
+  }
+
+  // Frog hopping on the median
+  const frogX=W/2+Math.sin(t*1.5)*80;
+  const frogY=H*0.36+Math.abs(Math.sin(t*3))*-20;
+  drawFrogSprite(frogX,frogY,CW*1.2,RH*1.2,0,1);
+
+  // Water with logs
+  for(let i=0;i<3;i++){
+    const lx=((t*40+i*220)%(W+200))-100;
+    drawLog(lx,H*0.08+i*H*0.09,CW*3,RH*0.8);
+  }
+}
+
+// ============================================================
+// DRAW - GAMEPLAY
+// ============================================================
 function drawGame(){
-  // Draw rows from top to bottom
   for(let r=0;r<ROWS;r++){
-    const y=r*RH;
-    const lane=lanes[r];
+    const y=r*RH;const lane=lanes[r];
     if(!lane)continue;
+
     if(lane.type==='goal'){
-      // Goal area
-      ctx.fillStyle='#1a3a1a';ctx.fillRect(0,y,W,RH);
-      // Water behind
       ctx.fillStyle='#1a4a8a';ctx.fillRect(0,y,W,RH);
+      // Bush/hedge between slots
+      ctx.fillStyle='#1a3a1a';
+      for(let bx=0;bx<W;bx+=CW){
+        let isSlot=false;
+        for(let i=0;i<goalPositions.length;i++){
+          if(Math.abs(bx/CW-goalPositions[i])<1.2)isSlot=true;
+        }
+        if(!isSlot){ctx.fillRect(bx,y,CW,RH);}
+      }
       // Lily pad slots
       for(let i=0;i<goalPositions.length;i++){
         const gx=goalPositions[i]*CW;
+        ctx.fillStyle=goalSlots[i]?'#2a7a2a':'#2a5a2a';
+        ctx.beginPath();ctx.ellipse(gx+CW/2,y+RH/2,CW*0.55,RH*0.4,0,0,Math.PI*2);ctx.fill();
+        // Lily pad line
+        ctx.strokeStyle='#1a4a1a';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(gx+CW/2,y+RH/2);ctx.lineTo(gx+CW/2+CW*0.3,y+RH*0.3);ctx.stroke();
         if(goalSlots[i]){
-          ctx.fillStyle='#2a6a2a';
-          ctx.beginPath();ctx.arc(gx+CW/2,y+RH/2,CW*0.6,0,Math.PI*2);ctx.fill();
-          drawMiniFrog(gx+5,y+5,CW-10,RH-10,'#4a4');
-        }else{
-          ctx.fillStyle='#2a5a2a';
-          ctx.beginPath();ctx.arc(gx+CW/2,y+RH/2,CW*0.6,0,Math.PI*2);ctx.fill();
+          drawFrogSprite(gx+6,y+6,CW-12,RH-12,0,1);
         }
       }
     }
     else if(lane.type==='water'){
-      // Water
-      const waveOff=Math.sin(animTime*2+r)*3;
       ctx.fillStyle='#1a4a8a';ctx.fillRect(0,y,W,RH);
-      // Wave lines
-      ctx.strokeStyle='#2a5a9a';ctx.lineWidth=1;
-      for(let wx=0;wx<W;wx+=30){
+      // Wave shimmer
+      ctx.strokeStyle='rgba(60,120,200,0.4)';ctx.lineWidth=1;
+      for(let wx=0;wx<W;wx+=24){
         ctx.beginPath();
-        ctx.moveTo(wx,y+RH/2+Math.sin(animTime*3+wx*0.05)*3);
-        ctx.lineTo(wx+15,y+RH/2+Math.sin(animTime*3+(wx+15)*0.05)*3);
-        ctx.stroke();
+        const wy=y+RH/2+Math.sin(animTime*2.5+wx*0.08+r)*3;
+        ctx.moveTo(wx,wy);ctx.lineTo(wx+12,wy+Math.sin(animTime*3+wx*0.1)*2);ctx.stroke();
       }
-      // Logs
       for(const obj of lane.objects){
-        drawLog(obj.x,y,obj.w,RH);
+        if(obj.kind==='log')drawLog(obj.x,y,obj.w,RH);
+        else if(obj.kind==='turtle')drawTurtle(obj.x,y,obj.w,RH,obj.divePhase);
       }
     }
     else if(lane.type==='road'){
-      ctx.fillStyle='#333';ctx.fillRect(0,y,W,RH);
-      // Dashed lines
-      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([15,15]);
+      ctx.fillStyle='#383838';ctx.fillRect(0,y,W,RH);
+      // Lane markings
+      ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([18,18]);
       ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
       ctx.setLineDash([]);
-      // Cars
       for(const obj of lane.objects){
-        drawCar(obj.x,y+4,obj.w,RH-8,obj.color,obj.speed<0);
+        if(obj.kind==='truck')drawTruck(obj.x,y+3,obj.w,RH-6,obj.color,obj.speed<0);
+        else if(obj.kind==='racer')drawRacer(obj.x,y+5,obj.w,RH-10,obj.color,obj.speed<0);
+        else drawCar(obj.x,y+4,obj.w,RH-8,obj.color,obj.speed<0);
       }
     }
     else if(lane.type==='safe'){
       ctx.fillStyle='#2a5a2a';ctx.fillRect(0,y,W,RH);
-      // Grass texture
-      ctx.fillStyle='#3a6a3a';
-      for(let gx=0;gx<W;gx+=20){
-        ctx.fillRect(gx+((r*7+gx)%10),y+5,2,RH-10);
+      // Grass tufts
+      ctx.fillStyle='#3a7a3a';
+      for(let gx=0;gx<W;gx+=18){
+        const h=4+((gx*7+r*13)%5);
+        ctx.beginPath();ctx.moveTo(gx,y+RH);ctx.lineTo(gx+3,y+RH-h);ctx.lineTo(gx+6,y+RH);ctx.fill();
+      }
+      // Flowers on median
+      if(r===6){
+        ctx.fillStyle='#ff8';
+        for(let fx=30;fx<W;fx+=90){
+          ctx.beginPath();ctx.arc(fx,y+RH/2,3,0,Math.PI*2);ctx.fill();
+        }
       }
     }
   }
+
   // Draw frog
-  if(gameState==='playing'||(gameState==='dying'&&deathTimer<0.5)){
-    const hopHeight=frog.hopping?Math.sin(frog.hopT*Math.PI)*15:0;
-    drawFrog(frog.px+2,frog.py+2-hopHeight,CW-4,RH-4);
+  if(gameState==='playing'||(gameState==='dying'&&deathTimer<0.6)){
+    const hopHeight=frog.hopping?Math.sin(frog.hopT*Math.PI)*18:0;
+    drawFrogSprite(frog.px+2,frog.py+2-hopHeight,CW-4,RH-4,frog.dir,frog.squash);
   }
 }
 
-function drawFrog(x,y,w,h){
+// ============================================================
+// DRAW - SPRITES
+// ============================================================
+function drawFrogSprite(x,y,w,h,dir,squash){
+  ctx.save();
+  const cx=x+w/2,cy=y+h/2;
+  ctx.translate(cx,cy);
+  // Rotate based on direction
+  if(dir===1)ctx.rotate(Math.PI/2);
+  else if(dir===2)ctx.rotate(Math.PI);
+  else if(dir===3)ctx.rotate(-Math.PI/2);
+  // Squash/stretch
+  const sq=squash||1;
+  ctx.scale(1/sq,sq);
+  ctx.translate(-cx,-cy);
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.2)';
+  ctx.beginPath();ctx.ellipse(cx,y+h*0.95,w*0.35,h*0.08,0,0,Math.PI*2);ctx.fill();
   // Body
-  ctx.fillStyle='#3c3';
-  ctx.beginPath();
-  ctx.ellipse(x+w/2,y+h*0.55,w*0.42,h*0.42,0,0,Math.PI*2);
-  ctx.fill();
+  ctx.fillStyle='#33cc33';
+  ctx.beginPath();ctx.ellipse(cx,cy+h*0.08,w*0.40,h*0.38,0,0,Math.PI*2);ctx.fill();
   // Head
-  ctx.fillStyle='#4d4';
-  ctx.beginPath();
-  ctx.ellipse(x+w/2,y+h*0.3,w*0.35,h*0.28,0,0,Math.PI*2);
-  ctx.fill();
-  // Eyes
+  ctx.fillStyle='#44dd44';
+  ctx.beginPath();ctx.ellipse(cx,cy-h*0.18,w*0.34,h*0.26,0,0,Math.PI*2);ctx.fill();
+  // Eyes (protruding)
   ctx.fillStyle='#fff';
-  ctx.beginPath();ctx.arc(x+w*0.33,y+h*0.2,w*0.12,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(x+w*0.67,y+h*0.2,w*0.12,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx-w*0.18,cy-h*0.32,w*0.11,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+w*0.18,cy-h*0.32,w*0.11,0,Math.PI*2);ctx.fill();
   // Pupils
   ctx.fillStyle='#111';
-  ctx.beginPath();ctx.arc(x+w*0.35,y+h*0.22,w*0.05,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(x+w*0.65,y+h*0.22,w*0.05,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx-w*0.16,cy-h*0.31,w*0.05,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+w*0.16,cy-h*0.31,w*0.05,0,Math.PI*2);ctx.fill();
   // Smile
-  ctx.strokeStyle='#282';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.arc(x+w/2,y+h*0.32,w*0.15,0.1*Math.PI,0.9*Math.PI);ctx.stroke();
-  // Legs
-  ctx.fillStyle='#3c3';
-  ctx.fillRect(x+2,y+h*0.7,w*0.2,h*0.25);
-  ctx.fillRect(x+w-w*0.2-2,y+h*0.7,w*0.2,h*0.25);
+  ctx.strokeStyle='#228822';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy-h*0.12,w*0.13,0.1*Math.PI,0.9*Math.PI);ctx.stroke();
+  // Front legs
+  ctx.fillStyle='#33cc33';
+  ctx.beginPath();ctx.ellipse(cx-w*0.32,cy+h*0.15,w*0.1,h*0.08,0.3,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+w*0.32,cy+h*0.15,w*0.1,h*0.08,-0.3,0,Math.PI*2);ctx.fill();
+  // Back legs
+  ctx.fillStyle='#2ab82a';
+  ctx.beginPath();ctx.ellipse(cx-w*0.28,cy+h*0.35,w*0.14,h*0.1,0.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+w*0.28,cy+h*0.35,w*0.14,h*0.1,-0.5,0,Math.PI*2);ctx.fill();
   // Feet
-  ctx.fillStyle='#2a2';
-  ctx.beginPath();ctx.ellipse(x+w*0.12,y+h*0.95,w*0.14,h*0.06,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(x+w*0.88,y+h*0.95,w*0.14,h*0.06,0,0,Math.PI*2);ctx.fill();
-}
-
-function drawMiniFrog(x,y,w,h,color){
-  ctx.fillStyle=color||'#3c3';
-  ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w*0.35,h*0.35,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';
-  ctx.beginPath();ctx.arc(x+w*0.35,y+h*0.3,2,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(x+w*0.65,y+h*0.3,2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#22aa22';
+  ctx.beginPath();ctx.ellipse(cx-w*0.35,cy+h*0.42,w*0.12,h*0.05,-0.3,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+w*0.35,cy+h*0.42,w*0.12,h*0.05,0.3,0,Math.PI*2);ctx.fill();
+  ctx.restore();
 }
 
 function drawLog(x,y,w,h){
+  const pad=3;
   ctx.fillStyle='#8B5E3C';
-  ctx.fillRect(x,y+4,w,h-8);
-  ctx.fillStyle='#7A4E2C';
-  ctx.fillRect(x,y+4,w,3);
-  ctx.fillRect(x,y+h-7,w,3);
-  // Wood grain
-  ctx.strokeStyle='#6A3E1C';ctx.lineWidth=1;
-  for(let lx=x+10;lx<x+w-5;lx+=18){
-    ctx.beginPath();ctx.moveTo(lx,y+8);ctx.lineTo(lx+8,y+h-8);ctx.stroke();
-  }
-  // End circles
+  ctx.beginPath();
+  ctx.roundRect(x,y+pad,w,h-pad*2,6);
+  ctx.fill();
+  // Highlight
   ctx.fillStyle='#9B6E4C';
-  ctx.beginPath();ctx.arc(x+6,y+h/2,6,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(x+w-6,y+h/2,6,0,Math.PI*2);ctx.fill();
+  ctx.fillRect(x+2,y+pad,w-4,4);
+  // Dark bottom
+  ctx.fillStyle='#6A3E1C';
+  ctx.fillRect(x+2,y+h-pad-3,w-4,3);
+  // Wood grain
+  ctx.strokeStyle='rgba(90,50,20,0.4)';ctx.lineWidth=1;
+  for(let lx=x+15;lx<x+w-10;lx+=20){
+    ctx.beginPath();ctx.moveTo(lx,y+pad+4);ctx.lineTo(lx+6,y+h-pad-4);ctx.stroke();
+  }
+  // End knots
+  ctx.fillStyle='#7a5030';
+  ctx.beginPath();ctx.arc(x+8,y+h/2,5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w-8,y+h/2,5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#5a3010';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(x+8,y+h/2,5,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(x+w-8,y+h/2,5,0,Math.PI*2);ctx.stroke();
+}
+
+function drawTurtle(x,y,w,h,divePhase){
+  const pad=4;
+  const count=Math.floor(w/(CW*0.7));
+  const tw=w/count;
+  ctx.globalAlpha=1-divePhase*0.7;
+  const yOff=divePhase*8;
+  for(let i=0;i<count;i++){
+    const tx=x+i*tw+2;
+    // Shell
+    ctx.fillStyle=divePhase>0.5?'#1a4a6a':'#2a7a4a';
+    ctx.beginPath();ctx.ellipse(tx+tw/2-2,y+h/2+yOff,tw*0.4,h*0.35-pad,0,0,Math.PI*2);ctx.fill();
+    // Shell pattern
+    ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(tx+tw/2-2,y+h/2+yOff,tw*0.25,h*0.2-pad,0,0,Math.PI*2);ctx.stroke();
+    // Head (first turtle only)
+    if(i===0&&divePhase<0.3){
+      ctx.fillStyle='#3a8a4a';
+      ctx.beginPath();ctx.arc(tx-4,y+h/2+yOff,4,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#111';
+      ctx.beginPath();ctx.arc(tx-5,y+h/2-2+yOff,1.5,0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
 }
 
 function drawCar(x,y,w,h,color,facingLeft){
+  // Body
   ctx.fillStyle=color;
-  ctx.fillRect(x,y,w,h);
+  ctx.beginPath();ctx.roundRect(x,y,w,h,4);ctx.fill();
+  // Roof
+  ctx.fillStyle=shadeColor(color,-20);
+  const roofX=facingLeft?x+w*0.15:x+w*0.25;
+  ctx.fillRect(roofX,y+2,w*0.5,h-4);
   // Windshield
-  ctx.fillStyle='rgba(150,200,255,0.7)';
-  if(facingLeft){ctx.fillRect(x+3,y+3,w*0.25,h-6);}
-  else{ctx.fillRect(x+w-w*0.25-3,y+3,w*0.25,h-6);}
+  ctx.fillStyle='rgba(150,210,255,0.75)';
+  if(facingLeft){ctx.fillRect(x+4,y+3,w*0.22,h-6);}
+  else{ctx.fillRect(x+w-w*0.22-4,y+3,w*0.22,h-6);}
+  // Headlights
+  ctx.fillStyle='#ff8';
+  if(facingLeft){ctx.fillRect(x+1,y+3,3,4);ctx.fillRect(x+1,y+h-7,3,4);}
+  else{ctx.fillRect(x+w-4,y+3,3,4);ctx.fillRect(x+w-4,y+h-7,3,4);}
   // Wheels
   ctx.fillStyle='#222';
-  ctx.fillRect(x+4,y-2,8,4);ctx.fillRect(x+4,y+h-2,8,4);
-  ctx.fillRect(x+w-12,y-2,8,4);ctx.fillRect(x+w-12,y+h-2,8,4);
+  ctx.beginPath();ctx.arc(x+w*0.2,y-1,4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w*0.2,y+h+1,4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w*0.8,y-1,4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w*0.8,y+h+1,4,0,Math.PI*2);ctx.fill();
 }
 
-// ===== DEATH SCENES =====
-function drawDeathScene0(){
-  // Black screen with text
-  const t=deathTimer;
-  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-
-  // Flattened frog
-  if(t>0.8){
-    ctx.fillStyle='#2a2';
-    ctx.beginPath();ctx.ellipse(W/2,H/2-30,40,8,0,0,Math.PI*2);ctx.fill();
-    // X eyes
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(W/2-15,H/2-38);ctx.lineTo(W/2-7,H/2-30);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(W/2-7,H/2-38);ctx.lineTo(W/2-15,H/2-30);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(W/2+7,H/2-38);ctx.lineTo(W/2+15,H/2-30);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(W/2+15,H/2-38);ctx.lineTo(W/2+7,H/2-30);ctx.stroke();
-  }
-
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  if(t>1.0){
-    const a1=Math.min(1,(t-1.0)*2);
-    ctx.fillStyle=`rgba(255,60,60,${a1})`;ctx.font='bold 48px Courier New';
-    ctx.fillText('You died.',W/2,H/2+40);
-  }
-  if(t>2.0){
-    const a2=Math.min(1,(t-2.0)*2);
-    ctx.fillStyle=`rgba(255,200,200,${a2})`;ctx.font='20px Courier New';
-    ctx.fillText(deathCause==='car'?'You jaywalked directly into oncoming traffic.':'You walked straight into the river and drowned.',W/2,H/2+80);
-  }
-  if(t>3.0){
-    const a3=Math.min(1,(t-3.0)*2);
-    ctx.fillStyle=`rgba(255,255,100,${a3})`;ctx.font='bold 24px Courier New';
-    ctx.fillText('Like an absolute idiot.',W/2,H/2+115);
-  }
+function drawTruck(x,y,w,h,color,facingLeft){
+  // Cab
+  ctx.fillStyle=color;
+  const cabW=w*0.3;
+  if(facingLeft){ctx.fillRect(x,y,cabW,h);ctx.fillRect(x+cabW-2,y+2,w-cabW+2,h-4);}
+  else{ctx.fillRect(x+w-cabW,y,cabW,h);ctx.fillRect(x,y+2,w-cabW+2,h-4);}
+  // Cargo
+  ctx.fillStyle=shadeColor(color,-30);
+  if(facingLeft){ctx.fillRect(x+cabW,y+1,w-cabW-2,h-2);}
+  else{ctx.fillRect(x+2,y+1,w-cabW-2,h-2);}
+  // Windshield
+  ctx.fillStyle='rgba(150,210,255,0.7)';
+  if(facingLeft){ctx.fillRect(x+2,y+3,cabW*0.6,h-6);}
+  else{ctx.fillRect(x+w-cabW+4,y+3,cabW*0.6,h-6);}
+  // Wheels
+  ctx.fillStyle='#222';
+  ctx.beginPath();ctx.arc(x+10,y+h+1,5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w-10,y+h+1,5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w/2,y+h+1,5,0,Math.PI*2);ctx.fill();
 }
 
+function drawRacer(x,y,w,h,color,facingLeft){
+  // Sleek body
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  if(facingLeft){
+    ctx.moveTo(x,y+h/2);ctx.lineTo(x+w*0.3,y);ctx.lineTo(x+w,y+2);
+    ctx.lineTo(x+w,y+h-2);ctx.lineTo(x+w*0.3,y+h);ctx.closePath();
+  }else{
+    ctx.moveTo(x+w,y+h/2);ctx.lineTo(x+w*0.7,y);ctx.lineTo(x,y+2);
+    ctx.lineTo(x,y+h-2);ctx.lineTo(x+w*0.7,y+h);ctx.closePath();
+  }
+  ctx.fill();
+  // Racing stripe
+  ctx.fillStyle='#fff';
+  ctx.fillRect(x+w*0.3,y+h/2-1,w*0.4,2);
+  // Windshield
+  ctx.fillStyle='rgba(150,210,255,0.7)';
+  ctx.fillRect(x+w*0.4,y+2,w*0.2,h-4);
+}
+
+function shadeColor(hex,amt){
+  let c=hex.replace('#','');
+  if(c.length===3)c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  const num=parseInt(c,16);
+  let r=(num>>16)+amt,g=((num>>8)&0xff)+amt,b=(num&0xff)+amt;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return '#'+(r<<16|g<<8|b).toString(16).padStart(6,'0');
+}
+
+// ============================================================
+// DRAW - CUTSCENE HELPERS
+// ============================================================
 function drawCutsceneFrog(x,y,s,color,extras){
-  // Generic frog for cutscenes, s=scale
   const sz=s||1;
   ctx.fillStyle=color||'#3c3';
   ctx.beginPath();ctx.ellipse(x,y,16*sz,20*sz,0,0,Math.PI*2);ctx.fill();
@@ -542,473 +1047,648 @@ function drawCutsceneFrog(x,y,s,color,extras){
   ctx.fillStyle='#111';
   ctx.beginPath();ctx.arc(x-5*sz,y-9*sz,2*sz,0,Math.PI*2);ctx.fill();
   ctx.beginPath();ctx.arc(x+5*sz,y-9*sz,2*sz,0,Math.PI*2);ctx.fill();
-
-  if(extras){
-    if(extras.bow){
-      ctx.fillStyle='#f4a';
-      ctx.beginPath();ctx.moveTo(x+10*sz,y-18*sz);ctx.lineTo(x+18*sz,y-25*sz);ctx.lineTo(x+18*sz,y-12*sz);ctx.closePath();ctx.fill();
-      ctx.beginPath();ctx.moveTo(x+10*sz,y-18*sz);ctx.lineTo(x+4*sz,y-25*sz);ctx.lineTo(x+4*sz,y-12*sz);ctx.closePath();ctx.fill();
-    }
-    if(extras.hat){
-      ctx.fillStyle='#33a';
-      ctx.fillRect(x-14*sz,y-28*sz,28*sz,8*sz);
-      ctx.fillRect(x-8*sz,y-40*sz,16*sz,14*sz);
-    }
-    if(extras.baby){
-      ctx.fillStyle='#5e5';
-      ctx.beginPath();ctx.ellipse(x,y+15*sz,6*sz,7*sz,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#fff';
-      ctx.beginPath();ctx.arc(x-2*sz,y+12*sz,1.5*sz,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(x+2*sz,y+12*sz,1.5*sz,0,Math.PI*2);ctx.fill();
-    }
-    if(extras.crying){
-      // Tears
-      const tearY=(deathTimer*80)%30;
-      ctx.fillStyle='rgba(100,150,255,0.8)';
-      ctx.beginPath();ctx.arc(x-8*sz,y-4*sz+tearY,2*sz,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(x+8*sz,y-2*sz+tearY*0.8,2*sz,0,Math.PI*2);ctx.fill();
-    }
-    if(extras.sad){
-      ctx.strokeStyle='#555';ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.arc(x,y+4*sz,5*sz,1.1*Math.PI,1.9*Math.PI);ctx.stroke();
-    }
-    if(extras.small){
-      // Just make it smaller - handled by s param
-    }
-    if(extras.black){
-      // Black outfit overlay
-      ctx.fillStyle='rgba(0,0,0,0.5)';
-      ctx.beginPath();ctx.ellipse(x,y+5*sz,14*sz,12*sz,0,0,Math.PI*2);ctx.fill();
-    }
+  if(!extras)return;
+  if(extras.bow){
+    ctx.fillStyle='#f4a';
+    ctx.beginPath();ctx.moveTo(x+10*sz,y-18*sz);ctx.lineTo(x+18*sz,y-25*sz);ctx.lineTo(x+18*sz,y-12*sz);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(x+10*sz,y-18*sz);ctx.lineTo(x+4*sz,y-25*sz);ctx.lineTo(x+4*sz,y-12*sz);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#f28';ctx.beginPath();ctx.arc(x+10*sz,y-18*sz,2*sz,0,Math.PI*2);ctx.fill();
   }
-}
-
-function drawDeathScene1(){
-  // Family gets the news
-  const t=deathTimer;
-  // House interior
-  ctx.fillStyle='#8B7355';ctx.fillRect(0,0,W,H); // walls
-  ctx.fillStyle='#654321';ctx.fillRect(0,H*0.7,W,H*0.3); // floor
-  // Window
-  ctx.fillStyle='#87CEEB';ctx.fillRect(50,80,120,100);
-  ctx.strokeStyle='#654321';ctx.lineWidth=4;ctx.strokeRect(50,80,120,100);
-  ctx.beginPath();ctx.moveTo(110,80);ctx.lineTo(110,180);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(50,130);ctx.lineTo(170,130);ctx.stroke();
-  // Door
-  ctx.fillStyle='#5a3a1a';ctx.fillRect(W-140,H*0.25,100,H*0.45);
-  ctx.fillStyle='#c90';ctx.beginPath();ctx.arc(W-55,H*0.48,5,0,Math.PI*2);ctx.fill();
-
-  // Police frog at door (appears at t>1)
-  if(t>1){
-    const px=W-90,py=H*0.38;
-    drawCutsceneFrog(px,py,1.1,'#2a6a2a',{hat:true,sad:true});
-    // Police badge
+  if(extras.hat){
+    ctx.fillStyle='#234';
+    ctx.fillRect(x-14*sz,y-28*sz,28*sz,6*sz);
+    ctx.fillRect(x-9*sz,y-40*sz,18*sz,14*sz);
+    // Badge
     ctx.fillStyle='#cc0';ctx.beginPath();
-    ctx.moveTo(px-3,py+5);ctx.lineTo(px,py-2);ctx.lineTo(px+3,py+5);ctx.closePath();ctx.fill();
+    ctx.moveTo(x,y-36*sz);ctx.lineTo(x-4*sz,y-30*sz);ctx.lineTo(x+4*sz,y-30*sz);ctx.closePath();ctx.fill();
   }
-
-  // Wife frog
-  const wx=W/2-40,wy=H*0.5;
-  if(t>2){
-    drawCutsceneFrog(wx,wy,1.2,'#5c5',{bow:true,crying:true});
-  }else{
-    drawCutsceneFrog(wx,wy,1.2,'#5c5',{bow:true});
+  if(extras.crying){
+    const tearOff=(animTime*60)%25;
+    ctx.fillStyle='rgba(80,140,255,0.75)';
+    ctx.beginPath();ctx.arc(x-7*sz,y-3*sz+tearOff,2.5*sz,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(x+7*sz,y-1*sz+tearOff*0.7,2*sz,0,Math.PI*2);ctx.fill();
+    // Second set offset
+    const tearOff2=(animTime*60+12)%25;
+    ctx.fillStyle='rgba(80,140,255,0.5)';
+    ctx.beginPath();ctx.arc(x-5*sz,y+tearOff2,1.5*sz,0,Math.PI*2);ctx.fill();
   }
-
-  // Kid frogs
-  drawCutsceneFrog(W/2+60,H*0.58,0.7,'#5e5',t>2.5?{crying:true,sad:true}:{});
-  drawCutsceneFrog(W/2+100,H*0.6,0.6,'#6e6',t>2.5?{crying:true,sad:true}:{});
-
-  // Couch
-  ctx.fillStyle='#8a4a2a';ctx.fillRect(200,H*0.55,200,50);
-  ctx.fillRect(195,H*0.45,15,60);ctx.fillRect(395,H*0.45,15,60);
-
-  // Text
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  if(t>1.5){
-    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font='bold 22px Courier New';
-    drawTextBox(W/2,H*0.15,`"Mrs. ${frogName}... I'm so sorry."`);
+  if(extras.sad){
+    ctx.strokeStyle='#444';ctx.lineWidth=1.5*sz;
+    ctx.beginPath();ctx.arc(x,y+5*sz,5*sz,1.15*Math.PI,1.85*Math.PI);ctx.stroke();
+  }else if(!extras.crying){
+    // Neutral mouth
+    ctx.strokeStyle='#444';ctx.lineWidth=1*sz;
+    ctx.beginPath();ctx.moveTo(x-4*sz,y+4*sz);ctx.lineTo(x+4*sz,y+4*sz);ctx.stroke();
   }
-  if(t>4.5){
-    ctx.fillStyle='rgba(255,220,150,0.9)';ctx.font='italic 20px Courier New';
-    drawTextBox(W/2,H*0.85,'"Mommy, where\'s Daddy?"');
+  if(extras.black){
+    ctx.fillStyle='rgba(20,20,30,0.5)';
+    ctx.beginPath();ctx.ellipse(x,y+5*sz,14*sz,12*sz,0,0,Math.PI*2);ctx.fill();
   }
 }
 
 function drawTextBox(x,y,text){
   ctx.save();
+  ctx.font=ctx.font||'16px Courier New';
   const m=ctx.measureText(text);
-  const bw=m.width+30,bh=36;
+  const bw=m.width+24,bh=34;
   ctx.fillStyle='rgba(0,0,0,0.7)';
-  ctx.fillRect(x-bw/2,y-bh/2,bw,bh);
+  ctx.beginPath();ctx.roundRect(x-bw/2,y-bh/2,bw,bh,6);ctx.fill();
   ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(text,x,y);
   ctx.restore();
 }
 
-function drawDeathScene2(){
-  // Funeral scene
-  const t=deathTimer;
-  // Dark sky
-  const grad=ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'#1a1a2e');grad.addColorStop(1,'#2a2a3e');
-  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-  // Ground
-  ctx.fillStyle='#2a3a2a';ctx.fillRect(0,H*0.65,W,H*0.35);
+// ============================================================
+// DRAW - DEATH SCENES
+// ============================================================
+function drawDeathScene0(){
+  const t=deathTimer-0.6; // offset for game showing first
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
 
-  // Rain
-  ctx.strokeStyle='rgba(100,150,200,0.4)';ctx.lineWidth=1;
-  for(let i=0;i<60;i++){
-    const rx=((i*37+t*100)%W);
-    const ry=((i*53+t*200)%H);
-    ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-2,ry+12);ctx.stroke();
+  // Flattened frog with tire marks
+  if(t>0.4){
+    const a0=Math.min(1,(t-0.4)*2);
+    ctx.globalAlpha=a0;
+    // Tire marks
+    if(deathCause==='car'){
+      ctx.strokeStyle='#333';ctx.lineWidth=8;
+      ctx.beginPath();ctx.moveTo(W/2-80,H/2-60);ctx.lineTo(W/2+80,H/2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(W/2-80,H/2-48);ctx.lineTo(W/2+80,H/2+12);ctx.stroke();
+    }
+    // Flat frog
+    ctx.fillStyle='#2a2';
+    ctx.beginPath();ctx.ellipse(W/2,H/2-25,35,7,0,0,Math.PI*2);ctx.fill();
+    // X eyes
+    ctx.strokeStyle='#eee';ctx.lineWidth=2.5;
+    [[-12,-8],[-4,-2],[4,-8],[12,-2]].forEach(([ox,oy],i)=>{
+      if(i%2===0){ctx.beginPath();ctx.moveTo(W/2+ox,H/2-35+oy);ctx.lineTo(W/2+ox+8,H/2-35+oy+6);ctx.stroke();}
+      else{ctx.beginPath();ctx.moveTo(W/2+ox,H/2-35+oy);ctx.lineTo(W/2+ox-8,H/2-35+oy+6);ctx.stroke();}
+    });
+    ctx.globalAlpha=1;
   }
+
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  if(t>1.0){
+    const a=Math.min(1,(t-1)*2);
+    ctx.fillStyle=`rgba(255,50,50,${a})`;ctx.font='bold 52px Courier New';
+    ctx.fillText('You died.',W/2,H/2+50);
+  }
+  if(t>2.2){
+    const a=Math.min(1,(t-2.2)*2);
+    ctx.fillStyle=`rgba(255,200,200,${a})`;ctx.font='19px Courier New';
+    const msg=deathCause==='car'?'You jaywalked directly into oncoming traffic.'
+      :deathCause==='water'?'You walked into the river and drowned.'
+      :'You stood still so long you died of indecision.';
+    ctx.fillText(msg,W/2,H/2+95);
+  }
+  if(t>3.5){
+    const a=Math.min(1,(t-3.5)*2);
+    ctx.fillStyle=`rgba(255,255,80,${a})`;ctx.font='bold 26px Courier New';
+    ctx.fillText('Like an absolute idiot.',W/2,H/2+135);
+  }
+}
+
+function drawDeathScene1(){
+  const t=deathTimer;
+  // Warm house interior
+  const wallGrad=ctx.createLinearGradient(0,0,0,H);
+  wallGrad.addColorStop(0,'#9B8365');wallGrad.addColorStop(1,'#7a6345');
+  ctx.fillStyle=wallGrad;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#5a4020';ctx.fillRect(0,H*0.72,W,H*0.28);
+  // Baseboard
+  ctx.fillStyle='#4a3010';ctx.fillRect(0,H*0.71,W,6);
+
+  // Window with curtains
+  ctx.fillStyle='#6090b0';ctx.fillRect(50,80,130,110);
+  ctx.strokeStyle='#5a3a1a';ctx.lineWidth=5;ctx.strokeRect(50,80,130,110);
+  ctx.beginPath();ctx.moveTo(115,80);ctx.lineTo(115,190);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(50,135);ctx.lineTo(180,135);ctx.stroke();
+  // Curtains
+  ctx.fillStyle='#8a3030';
+  ctx.fillRect(42,72,18,130);ctx.fillRect(170,72,18,130);
+  ctx.fillRect(42,72,156,12);
+
+  // Framed photo of frog family on wall
+  ctx.fillStyle='#c0a060';ctx.fillRect(250,70,80,65);
+  ctx.fillStyle='#404a30';ctx.fillRect(255,75,70,55);
+  // Tiny frog family in photo
+  drawCutsceneFrog(275,100,0.3,'#3c3',{});
+  drawCutsceneFrog(290,98,0.3,'#5c5',{bow:true});
+  drawCutsceneFrog(283,108,0.2,'#5e5',{});
+  drawCutsceneFrog(296,108,0.18,'#6e6',{});
+
+  // Door (right side)
+  ctx.fillStyle='#5a3a1a';ctx.fillRect(W-130,H*0.22,90,H*0.50);
+  ctx.fillStyle='#4a2a0a';ctx.fillRect(W-125,H*0.24,80,H*0.22);
+  ctx.fillRect(W-125,H*0.50,80,H*0.18);
+  ctx.fillStyle='#c90';ctx.beginPath();ctx.arc(W-50,H*0.46,5,0,Math.PI*2);ctx.fill();
+  // Door open slightly at t>0.5
+  if(t>0.5){
+    ctx.fillStyle='#2a1a0a';ctx.fillRect(W-130,H*0.22,6,H*0.50);
+  }
+
+  // Couch
+  ctx.fillStyle='#7a4020';
+  ctx.beginPath();ctx.roundRect(180,H*0.56,220,55,8);ctx.fill();
+  ctx.fillStyle='#6a3010';
+  ctx.fillRect(175,H*0.48,12,70);ctx.fillRect(403,H*0.48,12,70);
+  // Cushions
+  ctx.fillStyle='#8a5030';
+  ctx.beginPath();ctx.roundRect(190,H*0.57,95,45,6);ctx.fill();
+  ctx.beginPath();ctx.roundRect(295,H*0.57,95,45,6);ctx.fill();
+
+  // Police frog at door
+  if(t>1){
+    const a=Math.min(1,(t-1)*2);ctx.globalAlpha=a;
+    drawCutsceneFrog(W-85,H*0.38,1.15,'#2a6a2a',{hat:true,sad:true});
+    ctx.globalAlpha=1;
+  }
+
+  // Wife frog
+  const wx=W/2-50,wy=H*0.51;
+  drawCutsceneFrog(wx,wy,1.2,'#5c5',t>2.5?{bow:true,crying:true,sad:true}:{bow:true});
+
+  // Kid frogs near couch
+  drawCutsceneFrog(W/2+50,H*0.6,0.7,'#5e5',t>3?{crying:true,sad:true}:{});
+  drawCutsceneFrog(W/2+85,H*0.62,0.6,'#6e6',t>3?{crying:true,sad:true}:{});
+
+  // Typewriter text (managed by updateDeathSequence)
+  drawTypewriter();
+}
+
+function drawDeathScene2(){
+  const t=deathTimer;
+  // Dark sky gradient
+  const skyGrad=ctx.createLinearGradient(0,0,0,H*0.65);
+  skyGrad.addColorStop(0,'#101825');skyGrad.addColorStop(1,'#1a2540');
+  ctx.fillStyle=skyGrad;ctx.fillRect(0,0,W,H*0.65);
+  // Ground
+  const gndGrad=ctx.createLinearGradient(0,H*0.65,0,H);
+  gndGrad.addColorStop(0,'#2a3a28');gndGrad.addColorStop(1,'#1a2a18');
+  ctx.fillStyle=gndGrad;ctx.fillRect(0,H*0.65,W,H*0.35);
+
+  // Rain (deterministic based on index, animated by time)
+  ctx.strokeStyle='rgba(100,140,190,0.35)';ctx.lineWidth=1;
+  for(let i=0;i<80;i++){
+    const rx=((i*41.7+t*80)%((W+40))-20);
+    const ry=((i*67.3+t*180)%((H+30))-15);
+    ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-1.5,ry+14);ctx.stroke();
+  }
+
+  // Trees in background
+  ctx.fillStyle='#152015';
+  ctx.beginPath();ctx.arc(50,H*0.4,60,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(550,H*0.38,55,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#2a1a0a';ctx.fillRect(45,H*0.45,10,H*0.2);ctx.fillRect(545,H*0.43,10,H*0.22);
 
   // Tombstone
-  ctx.fillStyle='#777';
-  ctx.fillRect(W/2-50,H*0.35,100,120);
-  ctx.beginPath();ctx.arc(W/2,H*0.35,50,Math.PI,0);ctx.fill();
-  // Tombstone text
-  ctx.fillStyle='#222';ctx.font='bold 14px Courier New';ctx.textAlign='center';
-  ctx.fillText('R.I.P.',W/2,H*0.33);
-  ctx.font='bold 16px Courier New';
-  ctx.fillText(frogName,W/2,H*0.38);
-  ctx.font='11px Courier New';
-  ctx.fillText('Looked left,',W/2,H*0.42);
-  ctx.fillText('should have',W/2,H*0.45);
-  ctx.fillText('looked right',W/2,H*0.48);
+  ctx.fillStyle='#808080';
+  ctx.fillRect(W/2-55,H*0.33,110,130);
+  ctx.beginPath();ctx.arc(W/2,H*0.33,55,Math.PI,0);ctx.fill();
+  // Tombstone border
+  ctx.strokeStyle='#606060';ctx.lineWidth=3;
+  ctx.strokeRect(W/2-55,H*0.33,110,130);
+  ctx.beginPath();ctx.arc(W/2,H*0.33,55,Math.PI,0);ctx.stroke();
+  // Cross
+  ctx.fillStyle='#707070';
+  ctx.fillRect(W/2-3,H*0.24,6,20);ctx.fillRect(W/2-10,H*0.27,20,5);
+  // Text on tombstone
+  ctx.fillStyle='#1a1a1a';ctx.textAlign='center';
+  ctx.font='bold 15px Courier New';ctx.fillText('R.I.P.',W/2,H*0.31);
+  ctx.font='bold 17px Courier New';ctx.fillText(frogName,W/2,H*0.37);
+  ctx.font='10px Courier New';
+  ctx.fillText('Looked left,',W/2,H*0.41);
+  ctx.fillText('should have',W/2,H*0.44);
+  ctx.fillText('looked right',W/2,H*0.47);
 
-  // Flowers
-  ctx.fillStyle='#c44';
-  ctx.beginPath();ctx.arc(W/2-30,H*0.58,6,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#cc4';
-  ctx.beginPath();ctx.arc(W/2+20,H*0.59,5,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#4c4';
-  ctx.fillRect(W/2-32,H*0.59,4,15);ctx.fillRect(W/2+18,H*0.60,4,15);
+  // Flowers at base of tombstone
+  [[W/2-35,H*0.58,'#c44'],[W/2-20,H*0.59,'#e8e'],[W/2+15,H*0.585,'#cc4'],[W/2+30,H*0.59,'#c6c']].forEach(([fx,fy,fc])=>{
+    ctx.fillStyle='#4a4';ctx.fillRect(fx-1,fy,3,14);
+    ctx.fillStyle=fc;ctx.beginPath();ctx.arc(fx,fy,5,0,Math.PI*2);ctx.fill();
+  });
 
-  // Mourner frogs in a row
-  const mournerX=[80,150,220,380,450,520];
-  for(const mx of mournerX){
-    drawCutsceneFrog(mx,H*0.6,0.8,'#2a4a2a',{black:true,sad:true});
-  }
-
-  // Wife and kids in front
-  drawCutsceneFrog(W/2-80,H*0.62,1,'#3a5a3a',{bow:true,crying:true,black:true});
-  drawCutsceneFrog(W/2-50,H*0.66,0.6,'#3a5a3a',{crying:true,black:true});
-  drawCutsceneFrog(W/2-110,H*0.67,0.55,'#3a5a3a',{crying:true,black:true});
+  // Mourner frogs
+  [70,140,210,390,460,530].forEach(mx=>{
+    drawCutsceneFrog(mx,H*0.62,0.8,'#1a3a1a',{black:true,sad:true});
+  });
+  // Wife + kids in front, closer
+  drawCutsceneFrog(W/2-85,H*0.64,1,'#2a4a2a',{bow:true,crying:true,black:true});
+  drawCutsceneFrog(W/2-55,H*0.68,0.6,'#2a4a2a',{crying:true,black:true});
+  drawCutsceneFrog(W/2-115,H*0.69,0.5,'#2a4a2a',{crying:true,black:true});
 
   // Ribbert at podium
   if(t>2){
-    ctx.fillStyle='#5a3a1a';ctx.fillRect(W/2+80,H*0.52,40,50);
-    drawCutsceneFrog(W/2+100,H*0.48,1,'#2a6a2a',{sad:true});
+    const a=Math.min(1,(t-2));ctx.globalAlpha=a;
+    ctx.fillStyle='#4a3018';
+    ctx.fillRect(W/2+70,H*0.54,50,55);
+    ctx.fillRect(W/2+65,H*0.53,60,8);
+    drawCutsceneFrog(W/2+95,H*0.49,1.05,'#2a6a2a',{sad:true});
+    ctx.globalAlpha=1;
   }
 
-  // Text
-  if(t>3){
-    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font='italic 18px Courier New';ctx.textAlign='center';
-    drawTextBox(W/2,H*0.82,`"${frogName} was my best friend."`);
-  }
-  if(t>5.5){
-    drawTextBox(W/2,H*0.9,'"They had so much to live for."');
-  }
+  drawTypewriter();
 }
 
 function drawDeathScene3(){
-  // Naming ceremony - hospital
   const t=deathTimer;
-  // Hospital room
-  ctx.fillStyle='#e8e8f0';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#d0d0e0';ctx.fillRect(0,H*0.7,W,H*0.3);
-  // Blue stripe
-  ctx.fillStyle='#aac8e8';ctx.fillRect(0,H*0.12,W,8);
+  // Hospital
+  ctx.fillStyle='#e8e8f4';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#d4d4e4';ctx.fillRect(0,H*0.72,W,H*0.28);
+  // Blue accent stripe
+  ctx.fillStyle='#a0c0e0';ctx.fillRect(0,H*0.10,W,6);
+  ctx.fillStyle='#a0c0e0';ctx.fillRect(0,H*0.72,W,3);
 
-  // "6 months later" text
-  if(t<2){
-    ctx.fillStyle='rgba(0,0,0,'+Math.min(1,t)+')';
-    ctx.font='bold 28px Courier New';ctx.textAlign='center';
-    ctx.fillText('6 months later...',W/2,H*0.08);
+  // "6 months later" with fade
+  if(t<2.5){
+    const a=t<0.5?t*2:t>2?Math.max(0,(2.5-t)*2):1;
+    ctx.fillStyle=`rgba(0,0,0,${a*0.85})`;
+    ctx.font='bold 30px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('6 months later...',W/2,H*0.06);
   }
+
+  // Window
+  ctx.fillStyle='#b0d0f0';ctx.fillRect(420,50,140,100);
+  ctx.strokeStyle='#888';ctx.lineWidth=3;ctx.strokeRect(420,50,140,100);
+  ctx.beginPath();ctx.moveTo(490,50);ctx.lineTo(490,150);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(420,100);ctx.lineTo(560,100);ctx.stroke();
 
   // Hospital bed
-  ctx.fillStyle='#fff';ctx.fillRect(W/2-100,H*0.5,200,60);
-  ctx.fillStyle='#aaa';ctx.fillRect(W/2-105,H*0.48,5,80);ctx.fillRect(W/2+100,H*0.48,5,80);
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.roundRect(W/2-110,H*0.52,220,55,4);ctx.fill();
+  ctx.fillStyle='#bbb';
+  ctx.fillRect(W/2-115,H*0.50,5,65);ctx.fillRect(W/2+110,H*0.50,5,65);
+  // Blanket
+  ctx.fillStyle='#a0d4ff';
+  ctx.fillRect(W/2-100,H*0.56,200,18);
+  // Pillow
+  ctx.fillStyle='#f0f0f0';
+  ctx.beginPath();ctx.ellipse(W/2,H*0.54,30,8,0,0,Math.PI*2);ctx.fill();
 
-  // Ribbert holding baby
+  // Baby frog on bed
   if(t>1.5){
-    drawCutsceneFrog(W/2,H*0.4,1.3,'#2a6a2a',{baby:true});
-    // Baby on the bed
-    ctx.fillStyle='#8e8';
-    ctx.beginPath();ctx.ellipse(W/2,H*0.55,12,10,0,0,Math.PI*2);ctx.fill();
+    const ba=Math.min(1,(t-1.5)*2);ctx.globalAlpha=ba;
+    ctx.fillStyle='#88ee88';
+    ctx.beginPath();ctx.ellipse(W/2,H*0.555,11,9,0,0,Math.PI*2);ctx.fill();
+    // Baby eyes
     ctx.fillStyle='#fff';
-    ctx.beginPath();ctx.arc(W/2-3,H*0.53,2,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(W/2+3,H*0.53,2,0,Math.PI*2);ctx.fill();
-    // Blanket
-    ctx.fillStyle='#aadaff';
-    ctx.fillRect(W/2-15,H*0.56,30,12);
+    ctx.beginPath();ctx.arc(W/2-3,H*0.545,2.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+3,H*0.545,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.beginPath();ctx.arc(W/2-2.5,H*0.546,1,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+3.5,H*0.546,1,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
   }
 
-  // Text
-  if(t>2.5){
-    ctx.fillStyle='rgba(0,0,0,0.85)';ctx.font='italic 18px Courier New';ctx.textAlign='center';
-    drawTextBox(W/2,H*0.75,`"I'm naming them ${frogName}."`);
+  // Ribbert standing beside bed
+  if(t>1){
+    const ra=Math.min(1,(t-1));ctx.globalAlpha=ra;
+    drawCutsceneFrog(W/2-140,H*0.48,1.3,'#2a6a2a',{sad:true});
+    ctx.globalAlpha=1;
   }
-  if(t>4){
-    drawTextBox(W/2,H*0.83,`"After the bravest, dumbest frog I ever knew."`);
+
+  // *ribbit*
+  if(t>5.5){
+    const ra=Math.min(1,(t-5.5)*3);
+    ctx.globalAlpha=ra;
+    // Speech bubble from baby
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.ellipse(W/2+50,H*0.50,35,16,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(W/2+20,H*0.53);ctx.lineTo(W/2+35,H*0.50);ctx.lineTo(W/2+28,H*0.52);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#555';ctx.font='italic 14px Courier New';ctx.textAlign='center';
+    ctx.fillText('*ribbit*',W/2+50,H*0.505);
+    ctx.globalAlpha=1;
   }
-  if(t>5){
-    ctx.fillStyle='rgba(100,200,100,0.8)';ctx.font='italic 16px Courier New';
-    drawTextBox(W/2,H*0.93,'*ribbit*');
-  }
+
+  drawTypewriter();
 }
 
 function drawDeathScene4(){
-  // Montage
   const sub=deathSubScene;
-  const t=deathTimer%3.5;
-  const fadeIn=Math.min(1,t*2);
+  const subT=deathTimer%4;
+  const fadeIn=Math.min(1,subT*3);
 
-  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#050508';ctx.fillRect(0,0,W,H);
 
   // Header
-  ctx.fillStyle=`rgba(255,100,100,${fadeIn})`;ctx.font='bold 18px Courier New';ctx.textAlign='center';
-  ctx.fillText("Meanwhile, here's everything you'll never experience:",W/2,30);
-
+  ctx.globalAlpha=Math.min(1,deathTimer*2);
+  ctx.fillStyle='#f66';ctx.font='bold 17px Courier New';ctx.textAlign='center';
+  ctx.fillText("Meanwhile, here's everything you'll never experience:",W/2,25);
   ctx.globalAlpha=fadeIn;
 
   if(sub===0){
     // Movie theater
-    ctx.fillStyle='#1a0a0a';ctx.fillRect(50,60,W-100,H-120);
-    // Screen
-    ctx.fillStyle='#333';ctx.fillRect(100,80,W-200,250);
-    // Movie poster on screen
-    ctx.fillStyle='#0a2a4a';ctx.fillRect(100,80,W-200,250);
-    ctx.fillStyle='#ff0';ctx.font='bold 36px Courier New';
-    ctx.fillText('FROG WARS',W/2,170);
-    ctx.font='bold 20px Courier New';
-    ctx.fillText('THE LAST CROAK',W/2,210);
-    // Stars
-    for(let i=0;i<20;i++){
-      ctx.fillStyle='#ff0';
-      ctx.beginPath();ctx.arc(120+Math.random()*(W-240),90+Math.random()*60,1.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#120808';ctx.fillRect(40,50,W-80,H-110);
+    // Screen glow
+    ctx.fillStyle='#0a2848';ctx.fillRect(80,70,W-160,240);
+    // Screen content
+    const sGrad=ctx.createRadialGradient(W/2,190,20,W/2,190,200);
+    sGrad.addColorStop(0,'#0a3868');sGrad.addColorStop(1,'#061828');
+    ctx.fillStyle=sGrad;ctx.fillRect(80,70,W-160,240);
+    // Stars (deterministic)
+    ctx.fillStyle='#ff0';
+    for(const star of movieStars){
+      const twinkle=0.5+0.5*Math.sin(animTime*3+star.b*10);
+      ctx.globalAlpha=fadeIn*twinkle;
+      ctx.beginPath();ctx.arc(star.x,star.y,star.s,0,Math.PI*2);ctx.fill();
     }
-    // Seats
-    ctx.fillStyle='#4a1a1a';
+    ctx.globalAlpha=fadeIn;
+    // Title text
+    ctx.fillStyle='#ffd700';ctx.font='bold 38px Courier New';
+    ctx.fillText('FROG WARS',W/2,175);
+    ctx.font='bold 22px Courier New';ctx.fillStyle='#ffa500';
+    ctx.fillText('THE LAST CROAK',W/2,215);
+    ctx.font='14px Courier New';ctx.fillStyle='#aaa';
+    ctx.fillText('Coming to a lily pad near you',W/2,250);
+    // Theater seats
+    ctx.fillStyle='#3a1010';
     for(let row=0;row<3;row++){
-      for(let s=0;s<8;s++){
-        ctx.fillRect(80+s*58,370+row*45,40,35);
+      for(let s=0;s<9;s++){
+        ctx.beginPath();ctx.roundRect(55+s*58,355+row*48,42,38,4);ctx.fill();
       }
     }
-    // Audience frogs
-    for(let s=0;s<8;s++){
-      drawCutsceneFrog(100+s*58,360,0.5,'#3c3',{});
+    // Audience silhouettes
+    for(let s=0;s<9;s++){
+      drawCutsceneFrog(76+s*58,348,0.45,'#1a1a1a',{});
     }
-    ctx.fillStyle='#fff';ctx.font='16px Courier New';
-    drawTextBox(W/2,H-35,'The movie you waited 10 years for. It was incredible.');
   }
   else if(sub===1){
     // Concert
-    ctx.fillStyle='#1a0a2a';ctx.fillRect(0,50,W,H-50);
+    ctx.fillStyle='#0a0520';ctx.fillRect(0,45,W,H-45);
     // Stage
-    ctx.fillStyle='#3a2a1a';ctx.fillRect(50,H*0.4,W-100,H*0.3);
-    // Lights
-    const colors=['#f00','#0f0','#00f','#ff0','#f0f'];
-    for(let i=0;i<5;i++){
-      ctx.fillStyle=colors[i];ctx.globalAlpha=0.3*fadeIn;
-      ctx.beginPath();ctx.moveTo(W/2,0);
-      ctx.lineTo(50+i*120,H*0.5);ctx.lineTo(100+i*120,H*0.5);ctx.closePath();ctx.fill();
-    }
+    ctx.fillStyle='#2a1a08';ctx.fillRect(30,H*0.42,W-60,H*0.3);
+    // Spotlights
+    ['#f00','#0f0','#44f','#ff0','#f0f'].forEach((c,i)=>{
+      ctx.fillStyle=c;ctx.globalAlpha=0.15*fadeIn;
+      ctx.beginPath();ctx.moveTo(60+i*120,45);ctx.lineTo(30+i*110,H*0.55);ctx.lineTo(90+i*130,H*0.55);ctx.closePath();ctx.fill();
+    });
     ctx.globalAlpha=fadeIn;
-    // Band frogs on stage
-    drawCutsceneFrog(W/2-80,H*0.38,0.9,'#3c3',{});
-    drawCutsceneFrog(W/2,H*0.35,1.1,'#3c3',{});
-    drawCutsceneFrog(W/2+80,H*0.38,0.9,'#3c3',{});
+    // Band members
+    drawCutsceneFrog(W/2-90,H*0.39,1,'#3c3',{});
+    drawCutsceneFrog(W/2,H*0.36,1.2,'#3c3',{});
+    drawCutsceneFrog(W/2+90,H*0.39,1,'#3c3',{});
+    // Instruments (simple)
+    ctx.fillStyle='#840';ctx.fillRect(W/2-95,H*0.35,10,40); // guitar neck
+    ctx.fillStyle='#aaa';ctx.fillRect(W/2+85,H*0.34,10,45); // bass
+    // Drum kit center
+    ctx.strokeStyle='#888';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(W/2,H*0.42,15,0,Math.PI*2);ctx.stroke();
     // Banner
-    ctx.fillStyle='#fff';ctx.font='bold 24px Courier New';
-    ctx.fillText('THE LILY PADDERS',W/2,80);
-    ctx.font='18px Courier New';
-    ctx.fillText('REUNION TOUR',W/2,110);
+    ctx.fillStyle='#fff';ctx.font='bold 26px Courier New';
+    ctx.fillText('THE LILY PADDERS',W/2,75);
+    ctx.font='italic 18px Courier New';ctx.fillStyle='#ff8';
+    ctx.fillText('REUNION TOUR',W/2,100);
     // Crowd
-    for(let i=0;i<12;i++){
-      drawCutsceneFrog(40+i*48,H*0.75,0.4,'#2a2',{});
+    for(let i=0;i<14;i++){
+      drawCutsceneFrog(30+i*42,H*0.76,0.35,'#1a2a1a',{});
     }
-    ctx.fillStyle='#fff';ctx.font='16px Courier New';
-    drawTextBox(W/2,H-35,'Your favorite band, back together. The concert was legendary.');
+    // Raised hands
+    ctx.strokeStyle='#2a4a2a';ctx.lineWidth=2;
+    for(let i=0;i<8;i++){
+      const hx=60+i*70;
+      ctx.beginPath();ctx.moveTo(hx,H*0.73);ctx.lineTo(hx+Math.sin(animTime*4+i)*5,H*0.65);ctx.stroke();
+    }
   }
   else if(sub===2){
     // Moon landing
-    ctx.fillStyle='#000';ctx.fillRect(0,50,W,H-50);
-    // Moon
-    ctx.fillStyle='#ddd';
-    ctx.beginPath();ctx.arc(W/2,H*0.35,100,0,Math.PI*2);ctx.fill();
+    // Starfield
+    ctx.fillStyle='#020208';ctx.fillRect(0,45,W,H-45);
+    for(let i=0;i<40;i++){
+      ctx.fillStyle=`rgba(255,255,255,${0.3+((i*7)%5)*0.15})`;
+      ctx.beginPath();ctx.arc((i*47)%W,(i*73+50)%(H-80)+50,0.8+((i*3)%3)*0.5,0,Math.PI*2);ctx.fill();
+    }
+    // Earth in background
+    ctx.fillStyle='#2244aa';
+    ctx.beginPath();ctx.arc(480,120,50,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#33aa44';
+    ctx.beginPath();ctx.arc(470,110,15,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(500,130,12,0,Math.PI*2);ctx.fill();
+    // Moon surface
+    ctx.fillStyle='#ccc';
+    ctx.beginPath();ctx.arc(W/2,H*0.75,300,Math.PI+0.5,2*Math.PI-0.5);ctx.fill();
     // Craters
-    ctx.fillStyle='#bbb';
-    ctx.beginPath();ctx.arc(W/2-30,H*0.3,15,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(W/2+40,H*0.38,20,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(W/2+10,H*0.28,8,0,Math.PI*2);ctx.fill();
-    // Frog astronaut
-    // Helmet
-    ctx.strokeStyle='#fff';ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(W/2,H*0.33,22,0,Math.PI*2);ctx.stroke();
-    drawCutsceneFrog(W/2,H*0.33,0.8,'#3c3',{});
+    ctx.fillStyle='#aaa';
+    ctx.beginPath();ctx.arc(W/2-60,H*0.55,18,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+80,H*0.58,22,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+20,H*0.52,10,0,Math.PI*2);ctx.fill();
+    // Astronaut frog
+    ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(W/2-10,H*0.48,24,0,Math.PI*2);ctx.stroke(); // helmet
+    ctx.fillStyle='rgba(200,220,255,0.15)';
+    ctx.beginPath();ctx.arc(W/2-10,H*0.48,24,0,Math.PI*2);ctx.fill(); // visor
+    drawCutsceneFrog(W/2-10,H*0.48,0.85,'#3c3',{});
     // Flag
-    ctx.fillStyle='#fff';ctx.fillRect(W/2+50,H*0.2,3,80);
-    ctx.fillStyle='#4f4';ctx.fillRect(W/2+53,H*0.2,40,25);
-    ctx.fillStyle='#fff';ctx.font='8px Courier New';
-    ctx.fillText('FROG',W/2+73,H*0.2+15);
-    // News banner
-    ctx.fillStyle='rgba(200,0,0,0.9)';ctx.fillRect(30,H*0.65,W-60,40);
-    ctx.fillStyle='#fff';ctx.font='bold 16px Courier New';
-    ctx.fillText('BREAKING: FROGS LAND ON THE MOON',W/2,H*0.65+25);
-    drawTextBox(W/2,H-35,'One small hop for frog, one giant leap for frogkind.');
+    ctx.fillStyle='#ddd';ctx.fillRect(W/2+55,H*0.30,3,120);
+    ctx.fillStyle='#44ff44';ctx.fillRect(W/2+58,H*0.30,45,28);
+    ctx.fillStyle='#fff';ctx.font='bold 9px Courier New';
+    ctx.fillText('FROG',W/2+80,H*0.30+17);
+    // Breaking news banner
+    ctx.fillStyle='rgba(180,0,0,0.9)';
+    ctx.beginPath();ctx.roundRect(25,H*0.66,W-50,42,4);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 15px Courier New';
+    ctx.fillText('BREAKING: FROGS LAND ON THE MOON',W/2,H*0.66+25);
   }
   else if(sub===3){
     // Graduation
-    ctx.fillStyle='#4a3a2a';ctx.fillRect(0,50,W,H-50);
+    ctx.fillStyle='#3a2a18';ctx.fillRect(0,45,W,H-45);
     // Stage
-    ctx.fillStyle='#5a4a3a';ctx.fillRect(100,H*0.4,W-200,100);
+    ctx.fillStyle='#4a3a28';ctx.fillRect(80,H*0.38,W-160,110);
     // Podium
-    ctx.fillStyle='#6a5a4a';ctx.fillRect(W/2-25,H*0.35,50,65);
-    // Graduate frog (daughter) with cap
-    drawCutsceneFrog(W/2,H*0.32,1.2,'#5e5',{bow:true});
+    ctx.fillStyle='#5a4a38';
+    ctx.fillRect(W/2-28,H*0.33,56,70);
+    ctx.fillRect(W/2-35,H*0.33,70,10);
+    // Graduate frog (daughter)
+    drawCutsceneFrog(W/2,H*0.29,1.25,'#5e5',{bow:true});
     // Graduation cap
-    ctx.fillStyle='#111';ctx.fillRect(W/2-18,H*0.22-2,36,5);
-    ctx.fillRect(W/2-10,H*0.22-12,20,12);
-    // Tassel
+    ctx.fillStyle='#111';
+    ctx.fillRect(W/2-20,H*0.20,40,5);ctx.fillRect(W/2-12,H*0.14,24,10);
     ctx.strokeStyle='#cc0';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(W/2+18,H*0.22);ctx.lineTo(W/2+25,H*0.28);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2+20,H*0.20);ctx.lineTo(W/2+28,H*0.26);ctx.stroke();
+    ctx.fillStyle='#cc0';ctx.beginPath();ctx.arc(W/2+28,H*0.265,3,0,Math.PI*2);ctx.fill();
     // Diploma
-    ctx.fillStyle='#ffd';ctx.fillRect(W/2+15,H*0.32,20,10);
+    ctx.fillStyle='#ffeedd';
+    ctx.fillRect(W/2+18,H*0.29,22,12);
+    ctx.fillStyle='#c44';ctx.beginPath();ctx.arc(W/2+29,H*0.295+9,3,0,Math.PI*2);ctx.fill();
     // Audience
-    for(let i=0;i<10;i++){
-      drawCutsceneFrog(60+i*52,H*0.62,0.5,'#3a3',{});
+    for(let i=0;i<11;i++){
+      drawCutsceneFrog(50+i*50,H*0.6,0.5,'#2a3a2a',{});
     }
-    // Empty chair with label
-    ctx.fillStyle='#4a3a1a';ctx.fillRect(W/2-15,H*0.58,30,25);
-    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px Courier New';
-    ctx.fillText('RESERVED',W/2,H*0.62);
-    ctx.fillStyle='#fff';ctx.font='16px Courier New';
-    drawTextBox(W/2,H-35,'Your daughter graduated top of her class. She wished you were there.');
+    // Empty chair with reserved sign - THE emotional gut punch
+    ctx.fillStyle='#3a2a10';
+    ctx.beginPath();ctx.roundRect(W/2-18,H*0.56,36,30,3);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='bold 7px Courier New';
+    ctx.fillText('RESERVED',W/2,H*0.60);
+    ctx.fillText('FOR DAD',W/2,H*0.63);
+    // Spotlight on empty chair
+    ctx.fillStyle='rgba(255,255,200,0.08)';
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2-40,H*0.7);ctx.lineTo(W/2+40,H*0.7);ctx.closePath();ctx.fill();
   }
   else if(sub===4){
-    // Wife with Gerald
-    ctx.fillStyle='#5a8a5a';ctx.fillRect(0,50,W,H-50);
-    // Park bench
-    ctx.fillStyle='#8a6a4a';ctx.fillRect(W/2-80,H*0.45,160,20);
-    ctx.fillRect(W/2-70,H*0.46,10,40);ctx.fillRect(W/2+60,H*0.46,10,40);
-    // Wife frog
-    drawCutsceneFrog(W/2-30,H*0.4,1.1,'#5c5',{bow:true});
+    // Wife with Gerald the toad
+    // Park scene
+    const parkGrad=ctx.createLinearGradient(0,45,0,H);
+    parkGrad.addColorStop(0,'#88bbdd');parkGrad.addColorStop(0.5,'#88bbdd');parkGrad.addColorStop(0.5,'#4a8a4a');parkGrad.addColorStop(1,'#3a7a3a');
+    ctx.fillStyle=parkGrad;ctx.fillRect(0,45,W,H-45);
+    // Path
+    ctx.fillStyle='#c0a880';ctx.fillRect(0,H*0.65,W,30);
+    // Trees
+    [[70,H*0.32,55],[520,H*0.30,60],[300,H*0.28,45]].forEach(([tx,ty,ts])=>{
+      ctx.fillStyle='#2a5a2a';ctx.beginPath();ctx.arc(tx,ty,ts,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#3a2a10';ctx.fillRect(tx-5,ty+ts*0.5,10,H*0.65-ty);
+    });
+    // Bench
+    ctx.fillStyle='#6a4a2a';
+    ctx.beginPath();ctx.roundRect(W/2-85,H*0.48,170,16,3);ctx.fill();
+    ctx.fillRect(W/2-75,H*0.50,8,35);ctx.fillRect(W/2+67,H*0.50,8,35);
+    // Back rest
+    ctx.fillRect(W/2-80,H*0.43,160,8);
+    // Wife frog on bench
+    drawCutsceneFrog(W/2-25,H*0.44,1.1,'#5c5',{bow:true});
     // Gerald the toad
     ctx.fillStyle='#8a7a3a';
-    ctx.beginPath();ctx.ellipse(W/2+35,H*0.4,20,24,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(W/2+30,H*0.44,18,22,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#fff';
-    ctx.beginPath();ctx.arc(W/2+28,H*0.37,5,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(W/2+42,H*0.37,5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+24,H*0.41,4.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+36,H*0.41,4.5,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#111';
-    ctx.beginPath();ctx.arc(W/2+29,H*0.37,2.5,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(W/2+41,H*0.37,2.5,0,Math.PI*2);ctx.fill();
-    // Warts on Gerald
+    ctx.beginPath();ctx.arc(W/2+25,H*0.41,2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+35,H*0.41,2,0,Math.PI*2);ctx.fill();
+    // Warts
     ctx.fillStyle='#7a6a2a';
-    ctx.beginPath();ctx.arc(W/2+30,H*0.43,3,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(W/2+42,H*0.42,2,0,Math.PI*2);ctx.fill();
-    // Heart between them
-    ctx.fillStyle='#f44';ctx.font='24px serif';
-    ctx.fillText('\u2764',W/2,H*0.3);
-    // Trees
-    ctx.fillStyle='#3a6a3a';
-    ctx.beginPath();ctx.arc(80,H*0.3,50,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(520,H*0.28,60,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#5a3a1a';ctx.fillRect(75,H*0.35,10,100);ctx.fillRect(515,H*0.33,10,110);
-    ctx.fillStyle='#fff';ctx.font='16px Courier New';
-    drawTextBox(W/2,H-35,"Your wife found love again. He's a really nice toad named Gerald.");
+    [[W/2+22,H*0.46,3],[W/2+38,H*0.45,2.5],[W/2+30,H*0.48,2]].forEach(([wx,wy,wr])=>{
+      ctx.beginPath();ctx.arc(wx,wy,wr,0,Math.PI*2);ctx.fill();
+    });
+    // Gerald's smile
+    ctx.strokeStyle='#5a4a1a';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(W/2+30,H*0.44,8,0.1*Math.PI,0.9*Math.PI);ctx.stroke();
+    // Hearts floating
+    ctx.fillStyle='#f44';ctx.font='20px serif';
+    const hb=Math.sin(animTime*2)*5;
+    ctx.fillText('\u2764',W/2,H*0.33+hb);
+    ctx.font='14px serif';
+    ctx.fillText('\u2764',W/2+20,H*0.30+hb*0.7);
   }
   else if(sub===5){
     // Baby's first word
-    ctx.fillStyle='#e8d8c8';ctx.fillRect(0,50,W,H-50);
-    // Nursery
-    ctx.fillStyle='#aadaff';ctx.fillRect(100,H*0.15,W-200,200);
-    // Mobile above
+    ctx.fillStyle='#e8d8c8';ctx.fillRect(0,45,W,H-45);
+    // Nursery wall
+    ctx.fillStyle='#d0e8ff';ctx.fillRect(80,H*0.12,W-160,220);
+    // Stars and moon stickers on wall
+    ctx.fillStyle='#ffd700';ctx.font='18px serif';
+    ctx.fillText('\u2605',130,H*0.18);ctx.fillText('\u2605',400,H*0.16);ctx.fillText('\u2605',300,H*0.14);
+    ctx.fillStyle='#ffa';ctx.font='28px serif';ctx.fillText('\u263D',460,H*0.18);
+    // Mobile
     ctx.strokeStyle='#888';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(W/2,H*0.15);ctx.lineTo(W/2,H*0.1);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(W/2-40,H*0.1);ctx.lineTo(W/2+40,H*0.1);ctx.stroke();
-    // Hanging stars
-    ctx.fillStyle='#ff0';ctx.font='16px serif';
-    ctx.fillText('\u2605',W/2-40,H*0.15);ctx.fillText('\u2605',W/2+30,H*0.14);
+    ctx.beginPath();ctx.moveTo(W/2,H*0.12);ctx.lineTo(W/2,H*0.08);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2-45,H*0.08);ctx.lineTo(W/2+45,H*0.08);ctx.stroke();
+    // Hanging items
+    ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+    [[-40,'#f88','\u2605'],[0,'#8f8','\u2666'],[40,'#88f','\u2605']].forEach(([ox,col,ch])=>{
+      ctx.beginPath();ctx.moveTo(W/2+ox,H*0.08);ctx.lineTo(W/2+ox,H*0.13);ctx.stroke();
+      ctx.fillStyle=col;ctx.font='12px serif';ctx.fillText(ch,W/2+ox,H*0.14);
+    });
 
-    // Baby frog (bigger now, toddler)
-    drawCutsceneFrog(W/2,H*0.45,1.5,'#8e8',{});
+    // Baby frog (toddler now)
+    drawCutsceneFrog(W/2,H*0.46,1.6,'#88ee88',{});
 
     // Speech bubble
-    if(t>1.5){
+    if(subT>1.5){
+      const ba=Math.min(1,(subT-1.5)*3);ctx.globalAlpha=ba;
       ctx.fillStyle='#fff';
-      ctx.beginPath();
-      ctx.ellipse(W/2+70,H*0.33,60,25,0,0,Math.PI*2);ctx.fill();
-      // Tail
-      ctx.beginPath();ctx.moveTo(W/2+30,H*0.38);ctx.lineTo(W/2+45,H*0.33);ctx.lineTo(W/2+35,H*0.33);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#222';ctx.font='italic bold 18px Courier New';
-      ctx.fillText('"Daddy"',W/2+70,H*0.34);
+      ctx.beginPath();ctx.ellipse(W/2+75,H*0.34,55,22,0,0,Math.PI*2);ctx.fill();
+      // Bubble tail
+      ctx.beginPath();ctx.moveTo(W/2+30,H*0.40);ctx.lineTo(W/2+48,H*0.36);ctx.lineTo(W/2+40,H*0.38);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#222';ctx.font='italic bold 19px Courier New';
+      ctx.fillText('"Daddy"',W/2+75,H*0.35);
+      ctx.globalAlpha=1;
     }
 
-    // Ribbert watching, emotional
-    drawCutsceneFrog(W/2-120,H*0.5,1,'#2a6a2a',{crying:true,sad:true});
+    // Ribbert watching, tearful
+    drawCutsceneFrog(W/2-130,H*0.52,1.05,'#2a6a2a',{crying:true,sad:true});
 
-    ctx.fillStyle='#fff';ctx.font='16px Courier New';
-    drawTextBox(W/2,H-35,`Little ${frogName} Jr. said their first word. It was "Daddy."`);
+    // Photo on shelf of the dead frog
+    ctx.fillStyle='#8a6a4a';ctx.fillRect(W/2+130,H*0.35,50,55);
+    ctx.fillStyle='#3a4a3a';ctx.fillRect(W/2+134,H*0.36,42,42);
+    drawCutsceneFrog(W/2+155,H*0.39,0.25,'#3c3',{});
+    // Small candle next to it
+    ctx.fillStyle='#ffd';ctx.fillRect(W/2+125,H*0.38,4,12);
+    ctx.fillStyle='#f80';
+    ctx.beginPath();ctx.arc(W/2+127,H*0.375,3,0,Math.PI*2);ctx.fill();
   }
 
   ctx.globalAlpha=1;
+  drawTypewriter();
 }
 
 function drawDeathScene5(){
-  // Final scene
   const t=deathTimer;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';ctx.textBaseline='middle';
 
+  const timeStr=timeSurvived<60?Math.floor(timeSurvived)+'s'
+    :Math.floor(timeSurvived/60)+'m '+Math.floor(timeSurvived%60)+'s';
+
   const lines=[
-    {text:'All of this.',time:0.5,size:28,color:'#aaa'},
-    {text:'Every single moment.',time:2,size:28,color:'#aaa'},
-    {text:'Gone.',time:3.5,size:36,color:'#f44'},
-    {text:"Because you couldn't be bothered to look both ways.",time:5,size:20,color:'#888'},
-    {text:'GAME OVER',time:6.5,size:52,color:'#f44'},
-    {text:'Click to try not being an idiot this time.',time:7.5,size:16,color:'#666'},
+    {text:'All of this.',time:0.5,size:30,r:170,g:170,b:170},
+    {text:'Every single moment.',time:2,size:30,r:170,g:170,b:170},
+    {text:'Gone.',time:3.5,size:40,r:255,g:68,b:68},
+    {text:`Because you survived ${timeStr} and couldn't`,time:5,size:18,r:136,g:136,b:136},
+    {text:'be bothered to look both ways.',time:5.8,size:18,r:136,g:136,b:136},
+    {text:'GAME OVER',time:7,size:56,r:255,g:50,b:50},
+    {text:'Score: '+score,time:7.8,size:20,r:100,g:255,b:100},
+    {text:'Click to try not being an idiot this time.',time:8.5,size:15,r:100,g:100,b:100},
   ];
 
-  let yOff=H*0.2;
+  let yOff=H*0.12;
   for(const line of lines){
     if(t>line.time){
       const a=Math.min(1,(t-line.time)*1.5);
-      const c=line.color;
-      const r=parseInt(c[1],16)*17,g=parseInt(c[2],16)*17,b=parseInt(c[3],16)*17;
-      ctx.fillStyle=`rgba(${r},${g},${b},${a})`;
+      ctx.fillStyle=`rgba(${line.r},${line.g},${line.b},${a})`;
       ctx.font=`bold ${line.size}px Courier New`;
       ctx.fillText(line.text,W/2,yOff);
     }
-    yOff+=line.size+25;
+    yOff+=line.size+22;
   }
 }
 
-// ===== MAIN LOOP =====
+// ============================================================
+// MAIN LOOP
+// ============================================================
 let lastTime=0,firstFrame=true;
 function gameLoop(ts){
   if(firstFrame){lastTime=ts;firstFrame=false;}
   const dt=Math.min(0.05,(ts-lastTime)/1000);
   lastTime=ts;
+  animTime+=dt;
   update(dt);
   draw();
   requestAnimationFrame(gameLoop);
 }
 
-// Scale canvas
+// Canvas scaling
 function resize(){
-  const maxW=Math.min(window.innerWidth-10,600);
-  const scale=maxW/600;
+  const maxW=Math.min(window.innerWidth-4,600);
+  const maxH=window.innerHeight-40;
+  const scaleW=maxW/600;
+  const scaleH=maxH/650;
+  const scale=Math.min(scaleW,scaleH);
   canvas.style.width=Math.floor(600*scale)+'px';
   canvas.style.height=Math.floor(650*scale)+'px';
 }
 window.addEventListener('resize',resize);
 resize();
 
-// Initialize
+// Polyfill roundRect if needed
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    r=Math.min(r||0,w/2,h/2);
+    this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w,y+h-r);this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r,y+h);this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x,y+r);this.arcTo(x,y,x+r,y,r);
+  };
+}
+
+// Start
 initLanes();
 requestAnimationFrame(gameLoop);
 </script>
