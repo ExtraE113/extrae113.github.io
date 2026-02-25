@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Frogger: One Life</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Courier New',monospace;overflow:hidden}
+#wrapper{position:relative;display:flex;flex-direction:column;align-items:center}
+canvas{display:block;image-rendering:pixelated;border:2px solid #333}
+#title-screen,#name-screen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10;background:rgba(0,0,0,0.92)}
+#title-screen h1{color:#4f4;font-size:3em;text-shadow:0 0 20px #0f0;margin-bottom:10px}
+#title-screen h2{color:#8f8;font-size:1.2em;margin-bottom:30px;font-style:italic}
+#name-screen label{color:#4f4;font-size:1.4em;margin-bottom:10px}
+#name-screen input{background:#222;border:2px solid #4f4;color:#4f4;font-family:'Courier New',monospace;font-size:1.2em;padding:8px 16px;text-align:center;outline:none;margin-bottom:20px;width:250px}
+#name-screen input:focus{border-color:#8f8;box-shadow:0 0 10px #0f0}
+.btn{background:#4f4;color:#111;border:none;font-family:'Courier New',monospace;font-size:1.1em;padding:10px 30px;cursor:pointer;font-weight:bold;margin-top:10px}
+.btn:hover{background:#8f8}
+#hud{color:#4f4;font-size:1em;padding:5px 0;display:flex;justify-content:space-between;width:100%;max-width:600px}
+#dpad{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20}
+#dpad button{position:absolute;width:60px;height:60px;background:rgba(79,255,79,0.3);border:2px solid rgba(79,255,79,0.5);color:#4f4;font-size:24px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#dpad button:active{background:rgba(79,255,79,0.6)}
+#btn-up{left:65px;top:0}
+#btn-down{left:65px;top:130px}
+#btn-left{left:0;top:65px}
+#btn-right{left:130px;top:65px}
+@media(max-width:620px){canvas{width:100vw!important;height:auto!important}#dpad{display:block}}
+</style>
+</head>
+<body>
+<div id="wrapper">
+  <div id="hud"><span id="score-display">Score: 0</span><span id="level-display">Level: 1</span></div>
+  <canvas id="game" width="600" height="650"></canvas>
+  <div id="title-screen">
+    <h1>FROGGER</h1>
+    <h2>One Life. No Respawns.</h2>
+    <button class="btn" id="start-btn">START</button>
+  </div>
+  <div id="name-screen" style="display:none">
+    <label for="frog-name">Name your frog:</label>
+    <input id="frog-name" type="text" maxlength="12" value="Freddy" autofocus>
+    <button class="btn" id="go-btn">GO</button>
+  </div>
+  <div id="dpad">
+    <button id="btn-up">&#9650;</button>
+    <button id="btn-down">&#9660;</button>
+    <button id="btn-left">&#9664;</button>
+    <button id="btn-right">&#9654;</button>
+  </div>
+</div>
+<script>
+// ===== GAME CONSTANTS =====
+const W=600,H=650,COLS=15,ROWS=13,CW=W/COLS,RH=H/ROWS;
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const titleScreen=document.getElementById('title-screen');
+const nameScreen=document.getElementById('name-screen');
+const scoreDisplay=document.getElementById('score-display');
+const levelDisplay=document.getElementById('level-display');
+
+// Audio
+const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+function playTone(freq,dur,type='square',vol=0.1){
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.value=freq;g.gain.value=vol;
+  o.connect(g);g.connect(audioCtx.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+  o.stop(audioCtx.currentTime+dur);
+}
+function sfxHop(){playTone(400,0.08);setTimeout(()=>playTone(600,0.06),50)}
+function sfxSplat(){playTone(100,0.3,'sawtooth',0.15);playTone(80,0.4,'triangle',0.1)}
+function sfxSplash(){playTone(200,0.2,'sine',0.1);setTimeout(()=>playTone(150,0.3,'sine',0.08),100)}
+function sfxScore(){playTone(500,0.1);setTimeout(()=>playTone(700,0.1),100);setTimeout(()=>playTone(900,0.15),200)}
+function sfxSad(){playTone(300,0.4,'sine',0.08);setTimeout(()=>playTone(250,0.4,'sine',0.08),400);setTimeout(()=>playTone(200,0.6,'sine',0.08),800)}
+
+// Game state
+let frogName='Freddy';
+let gameState='title'; // title, naming, playing, dying, cutscene, gameover
+let score=0,level=1,difficulty=1;
+let frog={x:7,y:12,px:7*CW,py:12*RH,hopping:false,hopT:0,hopFrom:{x:0,y:0}};
+let goalSlots=[false,false,false,false,false];
+let goalPositions=[1,4,7,10,13];
+let animTime=0,shakeX=0,shakeY=0;
+
+// Death sequence
+let deathScene=0,deathTimer=0,deathSubScene=0,fadeAlpha=0;
+let deathCause='car'; // 'car' or 'water'
+
+// Lane data: type, objects, speed, direction
+let lanes=[];
+
+function initLanes(){
+  lanes=[];
+  const sp=0.5+difficulty*0.15;
+  // Row 0: goal
+  lanes.push({type:'goal',objects:[]});
+  // Rows 1-5: water
+  lanes.push({type:'water',objects:makeLogs(3,2.5*CW,sp*0.8,1)});
+  lanes.push({type:'water',objects:makeLogs(3,3.5*CW,sp*0.6,-1)});
+  lanes.push({type:'water',objects:makeLogs(4,2*CW,sp*1.0,1)});
+  lanes.push({type:'water',objects:makeLogs(2,4*CW,sp*0.5,-1)});
+  lanes.push({type:'water',objects:makeLogs(3,3*CW,sp*0.7,1)});
+  // Row 6: median
+  lanes.push({type:'safe',objects:[]});
+  // Rows 7-11: road
+  lanes.push({type:'road',objects:makeCars(3,CW*1.5,sp*1.2,-1,'#e44')});
+  lanes.push({type:'road',objects:makeCars(2,CW*2.5,sp*0.7,1,'#ff0')});
+  lanes.push({type:'road',objects:makeCars(3,CW*1.2,sp*1.5,-1,'#f80')});
+  lanes.push({type:'road',objects:makeCars(2,CW*2,sp*0.9,1,'#88f')});
+  lanes.push({type:'road',objects:makeCars(4,CW,sp*1.8,-1,'#f4f')});
+  // Row 12: start
+  lanes.push({type:'safe',objects:[]});
+}
+
+function makeLogs(count,logW,speed,dir){
+  const objs=[];
+  const spacing=W/count;
+  for(let i=0;i<count;i++){
+    objs.push({x:i*spacing,w:logW,speed:speed*dir});
+  }
+  return objs;
+}
+function makeCars(count,carW,speed,dir,color){
+  const objs=[];
+  const spacing=W/count;
+  for(let i=0;i<count;i++){
+    objs.push({x:i*spacing+Math.random()*40,w:carW,speed:speed*dir,color:color});
+  }
+  return objs;
+}
+
+function resetFrog(){
+  frog.x=7;frog.y=12;frog.px=7*CW;frog.py=12*RH;frog.hopping=false;frog.hopT=0;
+  maxYReached=12;
+}
+
+function resetGame(){
+  score=0;level=1;difficulty=1;
+  goalSlots=[false,false,false,false,false];
+  resetFrog();initLanes();
+  scoreDisplay.textContent='Score: 0';
+  levelDisplay.textContent='Level: 1';
+}
+
+// ===== INPUT =====
+const keys={};
+document.addEventListener('keydown',e=>{
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  if(gameState==='playing'&&!frog.hopping){
+    if(e.key==='ArrowUp'||e.key==='w'){e.preventDefault();moveFrog(0,-1);}
+    else if(e.key==='ArrowDown'||e.key==='s'){e.preventDefault();moveFrog(0,1);}
+    else if(e.key==='ArrowLeft'||e.key==='a'){e.preventDefault();moveFrog(-1,0);}
+    else if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();moveFrog(1,0);}
+  }
+  if(gameState==='gameover'&&deathScene>=6){
+    restartToTitle();
+  }
+});
+canvas.addEventListener('click',()=>{
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  if(gameState==='gameover'&&deathScene>=6)restartToTitle();
+});
+
+// Touch d-pad
+['up','down','left','right'].forEach(dir=>{
+  const btn=document.getElementById('btn-'+dir);
+  btn.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    if(gameState==='playing'&&!frog.hopping){
+      if(dir==='up')moveFrog(0,-1);
+      if(dir==='down')moveFrog(0,1);
+      if(dir==='left')moveFrog(-1,0);
+      if(dir==='right')moveFrog(1,0);
+    }
+  });
+});
+
+let maxYReached=12;
+function moveFrog(dx,dy){
+  const nx=frog.x+dx,ny=frog.y+dy;
+  if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return;
+  frog.hopping=true;frog.hopT=0;
+  frog.hopFrom={x:frog.px,y:frog.py};
+  frog.x=nx;frog.y=ny;
+  // Score for forward progress
+  if(ny<maxYReached){score+=(maxYReached-ny)*10;maxYReached=ny;scoreDisplay.textContent='Score: '+score;}
+  sfxHop();
+}
+
+// ===== TITLE / NAME SCREENS =====
+document.getElementById('start-btn').addEventListener('click',()=>{
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  titleScreen.style.display='none';
+  nameScreen.style.display='flex';
+  document.getElementById('frog-name').focus();
+});
+document.getElementById('go-btn').addEventListener('click',startGame);
+document.getElementById('frog-name').addEventListener('keydown',e=>{
+  if(e.key==='Enter')startGame();
+});
+
+function startGame(){
+  frogName=document.getElementById('frog-name').value.trim()||'Freddy';
+  nameScreen.style.display='none';
+  resetGame();
+  gameState='playing';
+}
+function restartToTitle(){
+  gameState='title';deathScene=0;deathTimer=0;deathSubScene=0;fadeAlpha=0;
+  titleScreen.style.display='flex';
+}
+
+// ===== UPDATE =====
+function update(dt){
+  if(gameState==='playing'){
+    animTime+=dt;
+    // Update hop animation
+    if(frog.hopping){
+      frog.hopT+=dt*5;
+      if(frog.hopT>=1){frog.hopT=1;frog.hopping=false;frog.px=frog.x*CW;frog.py=frog.y*RH;}
+      else{
+        frog.px=frog.hopFrom.x+(frog.x*CW-frog.hopFrom.x)*frog.hopT;
+        frog.py=frog.hopFrom.y+(frog.y*RH-frog.hopFrom.y)*frog.hopT;
+      }
+    }
+    // Update lane objects
+    const spd=dt*60; // normalize to ~60fps
+    for(let r=0;r<lanes.length;r++){
+      const lane=lanes[r];
+      for(const obj of lane.objects){
+        obj.x+=obj.speed*spd;
+        if(obj.speed>0&&obj.x>W)obj.x=-obj.w;
+        if(obj.speed<0&&obj.x+obj.w<0)obj.x=W;
+      }
+    }
+    // Check if frog is on water - move with log
+    if(!frog.hopping&&frog.y>=1&&frog.y<=5){
+      const lane=lanes[frog.y];
+      let onLog=false;
+      const fx=frog.px+CW/2,fy=frog.y*RH+RH/2;
+      for(const obj of lane.objects){
+        if(fx>=obj.x&&fx<=obj.x+obj.w){
+          onLog=true;
+          frog.px+=obj.speed*spd;
+          frog.x=Math.round(frog.px/CW);
+          break;
+        }
+      }
+      if(!onLog){deathCause='water';die();}
+      if(frog.px<-CW||frog.px>W){deathCause='water';die();}
+    }
+    // Check car collision
+    if(!frog.hopping&&frog.y>=7&&frog.y<=11){
+      const lane=lanes[frog.y];
+      const fx=frog.px,fy=frog.y*RH;
+      for(const obj of lane.objects){
+        if(fx+CW*0.7>obj.x&&fx+CW*0.3<obj.x+obj.w){
+          deathCause='car';die();break;
+        }
+      }
+    }
+    // Check goal
+    if(!frog.hopping&&frog.y===0){
+      let scored=false;
+      for(let i=0;i<goalPositions.length;i++){
+        if(!goalSlots[i]&&Math.abs(frog.x-goalPositions[i])<=1){
+          goalSlots[i]=true;scored=true;
+          score+=100+level*50;
+          scoreDisplay.textContent='Score: '+score;
+          sfxScore();
+          break;
+        }
+      }
+      if(!scored){deathCause='water';die();}
+      else{
+        // Check if all goals filled
+        if(goalSlots.every(s=>s)){
+          level++;difficulty+=0.5;
+          levelDisplay.textContent='Level: '+level;
+          goalSlots=[false,false,false,false,false];
+          initLanes();
+        }
+        resetFrog();
+      }
+    }
+  }
+  else if(gameState==='dying'||gameState==='cutscene'){
+    deathTimer+=dt;
+    updateDeathSequence(dt);
+  }
+}
+
+function die(){
+  if(gameState!=='playing')return;
+  gameState='dying';deathScene=0;deathTimer=0;fadeAlpha=0;deathSubScene=0;
+  if(deathCause==='car')sfxSplat();else sfxSplash();
+  sfxSad();
+}
+
+// ===== DEATH SEQUENCE =====
+function updateDeathSequence(dt){
+  if(deathScene===0){
+    // Scene 1: Death impact - 4s
+    if(deathTimer<0.3){shakeX=(Math.random()-0.5)*10;shakeY=(Math.random()-0.5)*10;}
+    else{shakeX=0;shakeY=0;}
+    if(deathTimer>4){deathScene=1;deathTimer=0;gameState='cutscene';}
+  }
+  else if(deathScene===1){
+    // Scene 2: Family gets news - 8s
+    if(deathTimer>8){deathScene=2;deathTimer=0;}
+  }
+  else if(deathScene===2){
+    // Scene 3: Funeral - 8s
+    if(deathTimer>8){deathScene=3;deathTimer=0;}
+  }
+  else if(deathScene===3){
+    // Scene 4: Naming - 6s
+    if(deathTimer>6){deathScene=4;deathTimer=0;deathSubScene=0;}
+  }
+  else if(deathScene===4){
+    // Scene 5: Montage - 21s (6 sub-scenes x 3.5s)
+    deathSubScene=Math.min(5,Math.floor(deathTimer/3.5));
+    if(deathTimer>21){deathScene=5;deathTimer=0;}
+  }
+  else if(deathScene===5){
+    // Scene 6: Final - stays
+    if(deathTimer>8){deathScene=6;gameState='gameover';}
+  }
+}
+
+// ===== DRAW =====
+function draw(){
+  ctx.save();
+  ctx.translate(shakeX,shakeY);
+
+  if(gameState==='playing'||gameState==='dying'&&deathTimer<0.5){
+    drawGame();
+    if(gameState==='dying'){
+      // Flash red
+      const a=deathTimer<0.15?0.6:Math.max(0,(0.5-deathTimer)*2);
+      ctx.fillStyle=`rgba(255,0,0,${a})`;
+      ctx.fillRect(0,0,W,H);
+    }
+  }
+  else if(gameState==='dying'){
+    drawDeathScene0();
+  }
+  else if(gameState==='cutscene'||gameState==='gameover'){
+    if(deathScene===1)drawDeathScene1();
+    else if(deathScene===2)drawDeathScene2();
+    else if(deathScene===3)drawDeathScene3();
+    else if(deathScene===4)drawDeathScene4();
+    else if(deathScene>=5)drawDeathScene5();
+  }
+  ctx.restore();
+}
+
+function drawGame(){
+  // Draw rows from top to bottom
+  for(let r=0;r<ROWS;r++){
+    const y=r*RH;
+    const lane=lanes[r];
+    if(!lane)continue;
+    if(lane.type==='goal'){
+      // Goal area
+      ctx.fillStyle='#1a3a1a';ctx.fillRect(0,y,W,RH);
+      // Water behind
+      ctx.fillStyle='#1a4a8a';ctx.fillRect(0,y,W,RH);
+      // Lily pad slots
+      for(let i=0;i<goalPositions.length;i++){
+        const gx=goalPositions[i]*CW;
+        if(goalSlots[i]){
+          ctx.fillStyle='#2a6a2a';
+          ctx.beginPath();ctx.arc(gx+CW/2,y+RH/2,CW*0.6,0,Math.PI*2);ctx.fill();
+          drawMiniFrog(gx+5,y+5,CW-10,RH-10,'#4a4');
+        }else{
+          ctx.fillStyle='#2a5a2a';
+          ctx.beginPath();ctx.arc(gx+CW/2,y+RH/2,CW*0.6,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }
+    else if(lane.type==='water'){
+      // Water
+      const waveOff=Math.sin(animTime*2+r)*3;
+      ctx.fillStyle='#1a4a8a';ctx.fillRect(0,y,W,RH);
+      // Wave lines
+      ctx.strokeStyle='#2a5a9a';ctx.lineWidth=1;
+      for(let wx=0;wx<W;wx+=30){
+        ctx.beginPath();
+        ctx.moveTo(wx,y+RH/2+Math.sin(animTime*3+wx*0.05)*3);
+        ctx.lineTo(wx+15,y+RH/2+Math.sin(animTime*3+(wx+15)*0.05)*3);
+        ctx.stroke();
+      }
+      // Logs
+      for(const obj of lane.objects){
+        drawLog(obj.x,y,obj.w,RH);
+      }
+    }
+    else if(lane.type==='road'){
+      ctx.fillStyle='#333';ctx.fillRect(0,y,W,RH);
+      // Dashed lines
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([15,15]);
+      ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+      ctx.setLineDash([]);
+      // Cars
+      for(const obj of lane.objects){
+        drawCar(obj.x,y+4,obj.w,RH-8,obj.color,obj.speed<0);
+      }
+    }
+    else if(lane.type==='safe'){
+      ctx.fillStyle='#2a5a2a';ctx.fillRect(0,y,W,RH);
+      // Grass texture
+      ctx.fillStyle='#3a6a3a';
+      for(let gx=0;gx<W;gx+=20){
+        ctx.fillRect(gx+((r*7+gx)%10),y+5,2,RH-10);
+      }
+    }
+  }
+  // Draw frog
+  if(gameState==='playing'||(gameState==='dying'&&deathTimer<0.5)){
+    const hopHeight=frog.hopping?Math.sin(frog.hopT*Math.PI)*15:0;
+    drawFrog(frog.px+2,frog.py+2-hopHeight,CW-4,RH-4);
+  }
+}
+
+function drawFrog(x,y,w,h){
+  // Body
+  ctx.fillStyle='#3c3';
+  ctx.beginPath();
+  ctx.ellipse(x+w/2,y+h*0.55,w*0.42,h*0.42,0,0,Math.PI*2);
+  ctx.fill();
+  // Head
+  ctx.fillStyle='#4d4';
+  ctx.beginPath();
+  ctx.ellipse(x+w/2,y+h*0.3,w*0.35,h*0.28,0,0,Math.PI*2);
+  ctx.fill();
+  // Eyes
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(x+w*0.33,y+h*0.2,w*0.12,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w*0.67,y+h*0.2,w*0.12,0,Math.PI*2);ctx.fill();
+  // Pupils
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.arc(x+w*0.35,y+h*0.22,w*0.05,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w*0.65,y+h*0.22,w*0.05,0,Math.PI*2);ctx.fill();
+  // Smile
+  ctx.strokeStyle='#282';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(x+w/2,y+h*0.32,w*0.15,0.1*Math.PI,0.9*Math.PI);ctx.stroke();
+  // Legs
+  ctx.fillStyle='#3c3';
+  ctx.fillRect(x+2,y+h*0.7,w*0.2,h*0.25);
+  ctx.fillRect(x+w-w*0.2-2,y+h*0.7,w*0.2,h*0.25);
+  // Feet
+  ctx.fillStyle='#2a2';
+  ctx.beginPath();ctx.ellipse(x+w*0.12,y+h*0.95,w*0.14,h*0.06,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+w*0.88,y+h*0.95,w*0.14,h*0.06,0,0,Math.PI*2);ctx.fill();
+}
+
+function drawMiniFrog(x,y,w,h,color){
+  ctx.fillStyle=color||'#3c3';
+  ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w*0.35,h*0.35,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(x+w*0.35,y+h*0.3,2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w*0.65,y+h*0.3,2,0,Math.PI*2);ctx.fill();
+}
+
+function drawLog(x,y,w,h){
+  ctx.fillStyle='#8B5E3C';
+  ctx.fillRect(x,y+4,w,h-8);
+  ctx.fillStyle='#7A4E2C';
+  ctx.fillRect(x,y+4,w,3);
+  ctx.fillRect(x,y+h-7,w,3);
+  // Wood grain
+  ctx.strokeStyle='#6A3E1C';ctx.lineWidth=1;
+  for(let lx=x+10;lx<x+w-5;lx+=18){
+    ctx.beginPath();ctx.moveTo(lx,y+8);ctx.lineTo(lx+8,y+h-8);ctx.stroke();
+  }
+  // End circles
+  ctx.fillStyle='#9B6E4C';
+  ctx.beginPath();ctx.arc(x+6,y+h/2,6,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+w-6,y+h/2,6,0,Math.PI*2);ctx.fill();
+}
+
+function drawCar(x,y,w,h,color,facingLeft){
+  ctx.fillStyle=color;
+  ctx.fillRect(x,y,w,h);
+  // Windshield
+  ctx.fillStyle='rgba(150,200,255,0.7)';
+  if(facingLeft){ctx.fillRect(x+3,y+3,w*0.25,h-6);}
+  else{ctx.fillRect(x+w-w*0.25-3,y+3,w*0.25,h-6);}
+  // Wheels
+  ctx.fillStyle='#222';
+  ctx.fillRect(x+4,y-2,8,4);ctx.fillRect(x+4,y+h-2,8,4);
+  ctx.fillRect(x+w-12,y-2,8,4);ctx.fillRect(x+w-12,y+h-2,8,4);
+}
+
+// ===== DEATH SCENES =====
+function drawDeathScene0(){
+  // Black screen with text
+  const t=deathTimer;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+
+  // Flattened frog
+  if(t>0.8){
+    ctx.fillStyle='#2a2';
+    ctx.beginPath();ctx.ellipse(W/2,H/2-30,40,8,0,0,Math.PI*2);ctx.fill();
+    // X eyes
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W/2-15,H/2-38);ctx.lineTo(W/2-7,H/2-30);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2-7,H/2-38);ctx.lineTo(W/2-15,H/2-30);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2+7,H/2-38);ctx.lineTo(W/2+15,H/2-30);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2+15,H/2-38);ctx.lineTo(W/2+7,H/2-30);ctx.stroke();
+  }
+
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  if(t>1.0){
+    const a1=Math.min(1,(t-1.0)*2);
+    ctx.fillStyle=`rgba(255,60,60,${a1})`;ctx.font='bold 48px Courier New';
+    ctx.fillText('You died.',W/2,H/2+40);
+  }
+  if(t>2.0){
+    const a2=Math.min(1,(t-2.0)*2);
+    ctx.fillStyle=`rgba(255,200,200,${a2})`;ctx.font='20px Courier New';
+    ctx.fillText(deathCause==='car'?'You jaywalked directly into oncoming traffic.':'You walked straight into the river and drowned.',W/2,H/2+80);
+  }
+  if(t>3.0){
+    const a3=Math.min(1,(t-3.0)*2);
+    ctx.fillStyle=`rgba(255,255,100,${a3})`;ctx.font='bold 24px Courier New';
+    ctx.fillText('Like an absolute idiot.',W/2,H/2+115);
+  }
+}
+
+function drawCutsceneFrog(x,y,s,color,extras){
+  // Generic frog for cutscenes, s=scale
+  const sz=s||1;
+  ctx.fillStyle=color||'#3c3';
+  ctx.beginPath();ctx.ellipse(x,y,16*sz,20*sz,0,0,Math.PI*2);ctx.fill();
+  // Eyes
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(x-6*sz,y-10*sz,4*sz,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+6*sz,y-10*sz,4*sz,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.arc(x-5*sz,y-9*sz,2*sz,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+5*sz,y-9*sz,2*sz,0,Math.PI*2);ctx.fill();
+
+  if(extras){
+    if(extras.bow){
+      ctx.fillStyle='#f4a';
+      ctx.beginPath();ctx.moveTo(x+10*sz,y-18*sz);ctx.lineTo(x+18*sz,y-25*sz);ctx.lineTo(x+18*sz,y-12*sz);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(x+10*sz,y-18*sz);ctx.lineTo(x+4*sz,y-25*sz);ctx.lineTo(x+4*sz,y-12*sz);ctx.closePath();ctx.fill();
+    }
+    if(extras.hat){
+      ctx.fillStyle='#33a';
+      ctx.fillRect(x-14*sz,y-28*sz,28*sz,8*sz);
+      ctx.fillRect(x-8*sz,y-40*sz,16*sz,14*sz);
+    }
+    if(extras.baby){
+      ctx.fillStyle='#5e5';
+      ctx.beginPath();ctx.ellipse(x,y+15*sz,6*sz,7*sz,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.arc(x-2*sz,y+12*sz,1.5*sz,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(x+2*sz,y+12*sz,1.5*sz,0,Math.PI*2);ctx.fill();
+    }
+    if(extras.crying){
+      // Tears
+      const tearY=(deathTimer*80)%30;
+      ctx.fillStyle='rgba(100,150,255,0.8)';
+      ctx.beginPath();ctx.arc(x-8*sz,y-4*sz+tearY,2*sz,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(x+8*sz,y-2*sz+tearY*0.8,2*sz,0,Math.PI*2);ctx.fill();
+    }
+    if(extras.sad){
+      ctx.strokeStyle='#555';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(x,y+4*sz,5*sz,1.1*Math.PI,1.9*Math.PI);ctx.stroke();
+    }
+    if(extras.small){
+      // Just make it smaller - handled by s param
+    }
+    if(extras.black){
+      // Black outfit overlay
+      ctx.fillStyle='rgba(0,0,0,0.5)';
+      ctx.beginPath();ctx.ellipse(x,y+5*sz,14*sz,12*sz,0,0,Math.PI*2);ctx.fill();
+    }
+  }
+}
+
+function drawDeathScene1(){
+  // Family gets the news
+  const t=deathTimer;
+  // House interior
+  ctx.fillStyle='#8B7355';ctx.fillRect(0,0,W,H); // walls
+  ctx.fillStyle='#654321';ctx.fillRect(0,H*0.7,W,H*0.3); // floor
+  // Window
+  ctx.fillStyle='#87CEEB';ctx.fillRect(50,80,120,100);
+  ctx.strokeStyle='#654321';ctx.lineWidth=4;ctx.strokeRect(50,80,120,100);
+  ctx.beginPath();ctx.moveTo(110,80);ctx.lineTo(110,180);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(50,130);ctx.lineTo(170,130);ctx.stroke();
+  // Door
+  ctx.fillStyle='#5a3a1a';ctx.fillRect(W-140,H*0.25,100,H*0.45);
+  ctx.fillStyle='#c90';ctx.beginPath();ctx.arc(W-55,H*0.48,5,0,Math.PI*2);ctx.fill();
+
+  // Police frog at door (appears at t>1)
+  if(t>1){
+    const px=W-90,py=H*0.38;
+    drawCutsceneFrog(px,py,1.1,'#2a6a2a',{hat:true,sad:true});
+    // Police badge
+    ctx.fillStyle='#cc0';ctx.beginPath();
+    ctx.moveTo(px-3,py+5);ctx.lineTo(px,py-2);ctx.lineTo(px+3,py+5);ctx.closePath();ctx.fill();
+  }
+
+  // Wife frog
+  const wx=W/2-40,wy=H*0.5;
+  if(t>2){
+    drawCutsceneFrog(wx,wy,1.2,'#5c5',{bow:true,crying:true});
+  }else{
+    drawCutsceneFrog(wx,wy,1.2,'#5c5',{bow:true});
+  }
+
+  // Kid frogs
+  drawCutsceneFrog(W/2+60,H*0.58,0.7,'#5e5',t>2.5?{crying:true,sad:true}:{});
+  drawCutsceneFrog(W/2+100,H*0.6,0.6,'#6e6',t>2.5?{crying:true,sad:true}:{});
+
+  // Couch
+  ctx.fillStyle='#8a4a2a';ctx.fillRect(200,H*0.55,200,50);
+  ctx.fillRect(195,H*0.45,15,60);ctx.fillRect(395,H*0.45,15,60);
+
+  // Text
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  if(t>1.5){
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font='bold 22px Courier New';
+    drawTextBox(W/2,H*0.15,`"Mrs. ${frogName}... I'm so sorry."`);
+  }
+  if(t>4.5){
+    ctx.fillStyle='rgba(255,220,150,0.9)';ctx.font='italic 20px Courier New';
+    drawTextBox(W/2,H*0.85,'"Mommy, where\'s Daddy?"');
+  }
+}
+
+function drawTextBox(x,y,text){
+  ctx.save();
+  const m=ctx.measureText(text);
+  const bw=m.width+30,bh=36;
+  ctx.fillStyle='rgba(0,0,0,0.7)';
+  ctx.fillRect(x-bw/2,y-bh/2,bw,bh);
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+function drawDeathScene2(){
+  // Funeral scene
+  const t=deathTimer;
+  // Dark sky
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#1a1a2e');grad.addColorStop(1,'#2a2a3e');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  // Ground
+  ctx.fillStyle='#2a3a2a';ctx.fillRect(0,H*0.65,W,H*0.35);
+
+  // Rain
+  ctx.strokeStyle='rgba(100,150,200,0.4)';ctx.lineWidth=1;
+  for(let i=0;i<60;i++){
+    const rx=((i*37+t*100)%W);
+    const ry=((i*53+t*200)%H);
+    ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-2,ry+12);ctx.stroke();
+  }
+
+  // Tombstone
+  ctx.fillStyle='#777';
+  ctx.fillRect(W/2-50,H*0.35,100,120);
+  ctx.beginPath();ctx.arc(W/2,H*0.35,50,Math.PI,0);ctx.fill();
+  // Tombstone text
+  ctx.fillStyle='#222';ctx.font='bold 14px Courier New';ctx.textAlign='center';
+  ctx.fillText('R.I.P.',W/2,H*0.33);
+  ctx.font='bold 16px Courier New';
+  ctx.fillText(frogName,W/2,H*0.38);
+  ctx.font='11px Courier New';
+  ctx.fillText('Looked left,',W/2,H*0.42);
+  ctx.fillText('should have',W/2,H*0.45);
+  ctx.fillText('looked right',W/2,H*0.48);
+
+  // Flowers
+  ctx.fillStyle='#c44';
+  ctx.beginPath();ctx.arc(W/2-30,H*0.58,6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#cc4';
+  ctx.beginPath();ctx.arc(W/2+20,H*0.59,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#4c4';
+  ctx.fillRect(W/2-32,H*0.59,4,15);ctx.fillRect(W/2+18,H*0.60,4,15);
+
+  // Mourner frogs in a row
+  const mournerX=[80,150,220,380,450,520];
+  for(const mx of mournerX){
+    drawCutsceneFrog(mx,H*0.6,0.8,'#2a4a2a',{black:true,sad:true});
+  }
+
+  // Wife and kids in front
+  drawCutsceneFrog(W/2-80,H*0.62,1,'#3a5a3a',{bow:true,crying:true,black:true});
+  drawCutsceneFrog(W/2-50,H*0.66,0.6,'#3a5a3a',{crying:true,black:true});
+  drawCutsceneFrog(W/2-110,H*0.67,0.55,'#3a5a3a',{crying:true,black:true});
+
+  // Ribbert at podium
+  if(t>2){
+    ctx.fillStyle='#5a3a1a';ctx.fillRect(W/2+80,H*0.52,40,50);
+    drawCutsceneFrog(W/2+100,H*0.48,1,'#2a6a2a',{sad:true});
+  }
+
+  // Text
+  if(t>3){
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font='italic 18px Courier New';ctx.textAlign='center';
+    drawTextBox(W/2,H*0.82,`"${frogName} was my best friend."`);
+  }
+  if(t>5.5){
+    drawTextBox(W/2,H*0.9,'"They had so much to live for."');
+  }
+}
+
+function drawDeathScene3(){
+  // Naming ceremony - hospital
+  const t=deathTimer;
+  // Hospital room
+  ctx.fillStyle='#e8e8f0';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#d0d0e0';ctx.fillRect(0,H*0.7,W,H*0.3);
+  // Blue stripe
+  ctx.fillStyle='#aac8e8';ctx.fillRect(0,H*0.12,W,8);
+
+  // "6 months later" text
+  if(t<2){
+    ctx.fillStyle='rgba(0,0,0,'+Math.min(1,t)+')';
+    ctx.font='bold 28px Courier New';ctx.textAlign='center';
+    ctx.fillText('6 months later...',W/2,H*0.08);
+  }
+
+  // Hospital bed
+  ctx.fillStyle='#fff';ctx.fillRect(W/2-100,H*0.5,200,60);
+  ctx.fillStyle='#aaa';ctx.fillRect(W/2-105,H*0.48,5,80);ctx.fillRect(W/2+100,H*0.48,5,80);
+
+  // Ribbert holding baby
+  if(t>1.5){
+    drawCutsceneFrog(W/2,H*0.4,1.3,'#2a6a2a',{baby:true});
+    // Baby on the bed
+    ctx.fillStyle='#8e8';
+    ctx.beginPath();ctx.ellipse(W/2,H*0.55,12,10,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(W/2-3,H*0.53,2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+3,H*0.53,2,0,Math.PI*2);ctx.fill();
+    // Blanket
+    ctx.fillStyle='#aadaff';
+    ctx.fillRect(W/2-15,H*0.56,30,12);
+  }
+
+  // Text
+  if(t>2.5){
+    ctx.fillStyle='rgba(0,0,0,0.85)';ctx.font='italic 18px Courier New';ctx.textAlign='center';
+    drawTextBox(W/2,H*0.75,`"I'm naming them ${frogName}."`);
+  }
+  if(t>4){
+    drawTextBox(W/2,H*0.83,`"After the bravest, dumbest frog I ever knew."`);
+  }
+  if(t>5){
+    ctx.fillStyle='rgba(100,200,100,0.8)';ctx.font='italic 16px Courier New';
+    drawTextBox(W/2,H*0.93,'*ribbit*');
+  }
+}
+
+function drawDeathScene4(){
+  // Montage
+  const sub=deathSubScene;
+  const t=deathTimer%3.5;
+  const fadeIn=Math.min(1,t*2);
+
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+
+  // Header
+  ctx.fillStyle=`rgba(255,100,100,${fadeIn})`;ctx.font='bold 18px Courier New';ctx.textAlign='center';
+  ctx.fillText("Meanwhile, here's everything you'll never experience:",W/2,30);
+
+  ctx.globalAlpha=fadeIn;
+
+  if(sub===0){
+    // Movie theater
+    ctx.fillStyle='#1a0a0a';ctx.fillRect(50,60,W-100,H-120);
+    // Screen
+    ctx.fillStyle='#333';ctx.fillRect(100,80,W-200,250);
+    // Movie poster on screen
+    ctx.fillStyle='#0a2a4a';ctx.fillRect(100,80,W-200,250);
+    ctx.fillStyle='#ff0';ctx.font='bold 36px Courier New';
+    ctx.fillText('FROG WARS',W/2,170);
+    ctx.font='bold 20px Courier New';
+    ctx.fillText('THE LAST CROAK',W/2,210);
+    // Stars
+    for(let i=0;i<20;i++){
+      ctx.fillStyle='#ff0';
+      ctx.beginPath();ctx.arc(120+Math.random()*(W-240),90+Math.random()*60,1.5,0,Math.PI*2);ctx.fill();
+    }
+    // Seats
+    ctx.fillStyle='#4a1a1a';
+    for(let row=0;row<3;row++){
+      for(let s=0;s<8;s++){
+        ctx.fillRect(80+s*58,370+row*45,40,35);
+      }
+    }
+    // Audience frogs
+    for(let s=0;s<8;s++){
+      drawCutsceneFrog(100+s*58,360,0.5,'#3c3',{});
+    }
+    ctx.fillStyle='#fff';ctx.font='16px Courier New';
+    drawTextBox(W/2,H-35,'The movie you waited 10 years for. It was incredible.');
+  }
+  else if(sub===1){
+    // Concert
+    ctx.fillStyle='#1a0a2a';ctx.fillRect(0,50,W,H-50);
+    // Stage
+    ctx.fillStyle='#3a2a1a';ctx.fillRect(50,H*0.4,W-100,H*0.3);
+    // Lights
+    const colors=['#f00','#0f0','#00f','#ff0','#f0f'];
+    for(let i=0;i<5;i++){
+      ctx.fillStyle=colors[i];ctx.globalAlpha=0.3*fadeIn;
+      ctx.beginPath();ctx.moveTo(W/2,0);
+      ctx.lineTo(50+i*120,H*0.5);ctx.lineTo(100+i*120,H*0.5);ctx.closePath();ctx.fill();
+    }
+    ctx.globalAlpha=fadeIn;
+    // Band frogs on stage
+    drawCutsceneFrog(W/2-80,H*0.38,0.9,'#3c3',{});
+    drawCutsceneFrog(W/2,H*0.35,1.1,'#3c3',{});
+    drawCutsceneFrog(W/2+80,H*0.38,0.9,'#3c3',{});
+    // Banner
+    ctx.fillStyle='#fff';ctx.font='bold 24px Courier New';
+    ctx.fillText('THE LILY PADDERS',W/2,80);
+    ctx.font='18px Courier New';
+    ctx.fillText('REUNION TOUR',W/2,110);
+    // Crowd
+    for(let i=0;i<12;i++){
+      drawCutsceneFrog(40+i*48,H*0.75,0.4,'#2a2',{});
+    }
+    ctx.fillStyle='#fff';ctx.font='16px Courier New';
+    drawTextBox(W/2,H-35,'Your favorite band, back together. The concert was legendary.');
+  }
+  else if(sub===2){
+    // Moon landing
+    ctx.fillStyle='#000';ctx.fillRect(0,50,W,H-50);
+    // Moon
+    ctx.fillStyle='#ddd';
+    ctx.beginPath();ctx.arc(W/2,H*0.35,100,0,Math.PI*2);ctx.fill();
+    // Craters
+    ctx.fillStyle='#bbb';
+    ctx.beginPath();ctx.arc(W/2-30,H*0.3,15,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+40,H*0.38,20,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+10,H*0.28,8,0,Math.PI*2);ctx.fill();
+    // Frog astronaut
+    // Helmet
+    ctx.strokeStyle='#fff';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(W/2,H*0.33,22,0,Math.PI*2);ctx.stroke();
+    drawCutsceneFrog(W/2,H*0.33,0.8,'#3c3',{});
+    // Flag
+    ctx.fillStyle='#fff';ctx.fillRect(W/2+50,H*0.2,3,80);
+    ctx.fillStyle='#4f4';ctx.fillRect(W/2+53,H*0.2,40,25);
+    ctx.fillStyle='#fff';ctx.font='8px Courier New';
+    ctx.fillText('FROG',W/2+73,H*0.2+15);
+    // News banner
+    ctx.fillStyle='rgba(200,0,0,0.9)';ctx.fillRect(30,H*0.65,W-60,40);
+    ctx.fillStyle='#fff';ctx.font='bold 16px Courier New';
+    ctx.fillText('BREAKING: FROGS LAND ON THE MOON',W/2,H*0.65+25);
+    drawTextBox(W/2,H-35,'One small hop for frog, one giant leap for frogkind.');
+  }
+  else if(sub===3){
+    // Graduation
+    ctx.fillStyle='#4a3a2a';ctx.fillRect(0,50,W,H-50);
+    // Stage
+    ctx.fillStyle='#5a4a3a';ctx.fillRect(100,H*0.4,W-200,100);
+    // Podium
+    ctx.fillStyle='#6a5a4a';ctx.fillRect(W/2-25,H*0.35,50,65);
+    // Graduate frog (daughter) with cap
+    drawCutsceneFrog(W/2,H*0.32,1.2,'#5e5',{bow:true});
+    // Graduation cap
+    ctx.fillStyle='#111';ctx.fillRect(W/2-18,H*0.22-2,36,5);
+    ctx.fillRect(W/2-10,H*0.22-12,20,12);
+    // Tassel
+    ctx.strokeStyle='#cc0';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W/2+18,H*0.22);ctx.lineTo(W/2+25,H*0.28);ctx.stroke();
+    // Diploma
+    ctx.fillStyle='#ffd';ctx.fillRect(W/2+15,H*0.32,20,10);
+    // Audience
+    for(let i=0;i<10;i++){
+      drawCutsceneFrog(60+i*52,H*0.62,0.5,'#3a3',{});
+    }
+    // Empty chair with label
+    ctx.fillStyle='#4a3a1a';ctx.fillRect(W/2-15,H*0.58,30,25);
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px Courier New';
+    ctx.fillText('RESERVED',W/2,H*0.62);
+    ctx.fillStyle='#fff';ctx.font='16px Courier New';
+    drawTextBox(W/2,H-35,'Your daughter graduated top of her class. She wished you were there.');
+  }
+  else if(sub===4){
+    // Wife with Gerald
+    ctx.fillStyle='#5a8a5a';ctx.fillRect(0,50,W,H-50);
+    // Park bench
+    ctx.fillStyle='#8a6a4a';ctx.fillRect(W/2-80,H*0.45,160,20);
+    ctx.fillRect(W/2-70,H*0.46,10,40);ctx.fillRect(W/2+60,H*0.46,10,40);
+    // Wife frog
+    drawCutsceneFrog(W/2-30,H*0.4,1.1,'#5c5',{bow:true});
+    // Gerald the toad
+    ctx.fillStyle='#8a7a3a';
+    ctx.beginPath();ctx.ellipse(W/2+35,H*0.4,20,24,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(W/2+28,H*0.37,5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+42,H*0.37,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.beginPath();ctx.arc(W/2+29,H*0.37,2.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+41,H*0.37,2.5,0,Math.PI*2);ctx.fill();
+    // Warts on Gerald
+    ctx.fillStyle='#7a6a2a';
+    ctx.beginPath();ctx.arc(W/2+30,H*0.43,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W/2+42,H*0.42,2,0,Math.PI*2);ctx.fill();
+    // Heart between them
+    ctx.fillStyle='#f44';ctx.font='24px serif';
+    ctx.fillText('\u2764',W/2,H*0.3);
+    // Trees
+    ctx.fillStyle='#3a6a3a';
+    ctx.beginPath();ctx.arc(80,H*0.3,50,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(520,H*0.28,60,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#5a3a1a';ctx.fillRect(75,H*0.35,10,100);ctx.fillRect(515,H*0.33,10,110);
+    ctx.fillStyle='#fff';ctx.font='16px Courier New';
+    drawTextBox(W/2,H-35,"Your wife found love again. He's a really nice toad named Gerald.");
+  }
+  else if(sub===5){
+    // Baby's first word
+    ctx.fillStyle='#e8d8c8';ctx.fillRect(0,50,W,H-50);
+    // Nursery
+    ctx.fillStyle='#aadaff';ctx.fillRect(100,H*0.15,W-200,200);
+    // Mobile above
+    ctx.strokeStyle='#888';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W/2,H*0.15);ctx.lineTo(W/2,H*0.1);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2-40,H*0.1);ctx.lineTo(W/2+40,H*0.1);ctx.stroke();
+    // Hanging stars
+    ctx.fillStyle='#ff0';ctx.font='16px serif';
+    ctx.fillText('\u2605',W/2-40,H*0.15);ctx.fillText('\u2605',W/2+30,H*0.14);
+
+    // Baby frog (bigger now, toddler)
+    drawCutsceneFrog(W/2,H*0.45,1.5,'#8e8',{});
+
+    // Speech bubble
+    if(t>1.5){
+      ctx.fillStyle='#fff';
+      ctx.beginPath();
+      ctx.ellipse(W/2+70,H*0.33,60,25,0,0,Math.PI*2);ctx.fill();
+      // Tail
+      ctx.beginPath();ctx.moveTo(W/2+30,H*0.38);ctx.lineTo(W/2+45,H*0.33);ctx.lineTo(W/2+35,H*0.33);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#222';ctx.font='italic bold 18px Courier New';
+      ctx.fillText('"Daddy"',W/2+70,H*0.34);
+    }
+
+    // Ribbert watching, emotional
+    drawCutsceneFrog(W/2-120,H*0.5,1,'#2a6a2a',{crying:true,sad:true});
+
+    ctx.fillStyle='#fff';ctx.font='16px Courier New';
+    drawTextBox(W/2,H-35,`Little ${frogName} Jr. said their first word. It was "Daddy."`);
+  }
+
+  ctx.globalAlpha=1;
+}
+
+function drawDeathScene5(){
+  // Final scene
+  const t=deathTimer;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+
+  const lines=[
+    {text:'All of this.',time:0.5,size:28,color:'#aaa'},
+    {text:'Every single moment.',time:2,size:28,color:'#aaa'},
+    {text:'Gone.',time:3.5,size:36,color:'#f44'},
+    {text:"Because you couldn't be bothered to look both ways.",time:5,size:20,color:'#888'},
+    {text:'GAME OVER',time:6.5,size:52,color:'#f44'},
+    {text:'Click to try not being an idiot this time.',time:7.5,size:16,color:'#666'},
+  ];
+
+  let yOff=H*0.2;
+  for(const line of lines){
+    if(t>line.time){
+      const a=Math.min(1,(t-line.time)*1.5);
+      const c=line.color;
+      const r=parseInt(c[1],16)*17,g=parseInt(c[2],16)*17,b=parseInt(c[3],16)*17;
+      ctx.fillStyle=`rgba(${r},${g},${b},${a})`;
+      ctx.font=`bold ${line.size}px Courier New`;
+      ctx.fillText(line.text,W/2,yOff);
+    }
+    yOff+=line.size+25;
+  }
+}
+
+// ===== MAIN LOOP =====
+let lastTime=0,firstFrame=true;
+function gameLoop(ts){
+  if(firstFrame){lastTime=ts;firstFrame=false;}
+  const dt=Math.min(0.05,(ts-lastTime)/1000);
+  lastTime=ts;
+  update(dt);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+// Scale canvas
+function resize(){
+  const maxW=Math.min(window.innerWidth-10,600);
+  const scale=maxW/600;
+  canvas.style.width=Math.floor(600*scale)+'px';
+  canvas.style.height=Math.floor(650*scale)+'px';
+}
+window.addEventListener('resize',resize);
+resize();
+
+// Initialize
+initLanes();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
