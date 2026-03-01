@@ -67,6 +67,13 @@ def parse_md():
     main_raw = body_cells[1].strip() if len(body_cells) > 1 else ''
 
     # --- Parse sidebar sections ---
+
+    # PRIZES section (between PRIZES and SKILLS)
+    prizes_match = re.search(r'PRIZES\s+(.*?)\s*SKILLS', sidebar_raw, re.DOTALL)
+    prizes_raw = prizes_match.group(1).strip() if prizes_match else ''
+    prizes = parse_prizes(prizes_raw)
+
+    # SKILLS section
     skills_match = re.search(r'SKILLS\s+(.*?)\s*ACTIVITIES', sidebar_raw, re.DOTALL)
     skills_raw = skills_match.group(1).strip() if skills_match else ''
 
@@ -99,6 +106,7 @@ def parse_md():
     experience = parse_section_entries(experience_raw, 'WORK EXPERIENCE')
 
     return {
+        'prizes': prizes,
         'skills': skills,
         'activities': activities,
         'morning': morning,
@@ -156,6 +164,43 @@ def parse_section_entries(raw, section_header):
         })
 
     return entries
+
+
+def parse_prizes(prizes_raw):
+    """Parse the PRIZES section from sidebar text (no bold markers)."""
+    prizes = []
+
+    # Look for the main prize entry with em-dash and italic subtitle
+    # Pattern: Title — *Subtitle* Description ending with period. Remaining items...
+    main_match = re.match(
+        r'(.+?)\s*—\s*\*(.+?)\*\s*(.*?\.)\s*(.*)',
+        prizes_raw,
+        re.DOTALL,
+    )
+
+    if main_match:
+        prizes.append({
+            'title': clean_md_inline(main_match.group(1)),
+            'subtitle': main_match.group(2).strip(),
+            'body': clean_md_inline(main_match.group(3)),
+        })
+        remaining = main_match.group(4).strip()
+    else:
+        remaining = prizes_raw
+
+    # Split remaining prize items on double-space boundaries
+    if remaining:
+        parts = re.split(r'\s{2,}', remaining)
+        for part in parts:
+            part = clean_md_inline(part)
+            if part:
+                prizes.append({
+                    'title': part,
+                    'subtitle': '',
+                    'body': '',
+                })
+
+    return prizes
 
 
 def split_edu_description(desc):
@@ -245,6 +290,10 @@ def generate_resume_html(data):
     for entry in data['education']:
         all_lines.extend(generate_entry_html(entry, 'education', is_education=True))
 
+    # Prizes entries
+    for entry in data['prizes']:
+        all_lines.extend(generate_entry_html(entry, 'prizes', is_education=False))
+
     # Experience entries
     for entry in data['experience']:
         all_lines.extend(generate_entry_html(entry, 'experience', is_education=False))
@@ -305,6 +354,13 @@ def main():
 
     # Debug output for verification
     print("=== Parsed Resume Data ===")
+
+    print(f"\nPrizes ({len(data['prizes'])} entries):")
+    for e in data['prizes']:
+        print(f"  [{e['title']}] — [{e['subtitle']}]")
+        if e['body']:
+            print(f"    Body: {e['body'][:100]}{'...' if len(e['body']) > 100 else ''}")
+
     print(f"\nSkills ({len(data['skills'])}):")
     for s in data['skills']:
         print(f"  - {s}")
